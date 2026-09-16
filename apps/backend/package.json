@@ -1,5 +1,5 @@
 {
-  "name": "@nhy/backend",
+  "name": "backend",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
@@ -7,11 +7,9 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "@nhy/web": "*",
     "hono": "^4.13.8"
   },
   "devDependencies": {
-    "@types/bun": "^1.4.2",
     "wrangler": "^4.110.0"
   }
 }

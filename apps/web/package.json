@@ -1,12 +1,9 @@
 {
-  "name": "@nhy/web",
+  "name": "web",
   "type": "module",
   "version": "0.0.1",
   "engines": {
     "node": ">=22.12.0"
-  },
-  "exports": {
-    "./*": "./dist/*"
   },
   "scripts": {
     "dev": "astro dev",

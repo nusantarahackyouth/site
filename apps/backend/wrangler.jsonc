@@ -3,9 +3,6 @@
   "name": "nhy-site",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-15",
-  "assets": {
-    "directory": "../web/dist/client",
-  },
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
