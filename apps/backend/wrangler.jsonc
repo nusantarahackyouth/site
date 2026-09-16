@@ -10,9 +10,6 @@
     {
       "pattern": "hackyouth.id/api/*",
       "zone_name": "hackyouth.id",
-      "custom_domain": true,
-      "enabled": true,
-      "previews_enabled": false,
     },
   ],
   // "compatibility_flags": [
