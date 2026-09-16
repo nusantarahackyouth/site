@@ -1,14 +1,27 @@
+---
+import "../styles/global.css";
+
+import Navbar from "@/components/Navbar.astro";
+---
+
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
+		<meta name="theme-color" content="#15111f" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+
+		<title>Nusantara Hack Youth</title>
+
+		<!-- Compute site theme to use -->
+		<style>section#loader,html{background-color:#fff4f5}html.dark,html.dark section#loader{background-color:#161618}html:not(.dark) section#loader video{filter:invert(1)}section#loader{box-sizing:border-box;position:fixed;top:0;left:0;z-index:9999999;width:100%;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:2rem}section#loader video{width:100%;max-width:56px;height:auto;user-select:none;pointer-events:none}</style>
+		<script>(()=>{const a=localStorage.getItem("theme"),b="light"===a||"dark"===a?a:matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.classList.toggle("dark","dark"===b)})();</script>
 	</head>
 	<body>
+	    <Navbar />
 		<slot />
 	</body>
 </html>

@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+    color: black;
+}
+
+html.dark {
+    color: white;
+}
+
+html.dark img#nhy-logo {
+    filter: saturate(0) invert(1);
+}

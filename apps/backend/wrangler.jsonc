@@ -1,8 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nhy-site",
+  "name": "nhy-site-be",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-15",
+  "upload_source_maps": true,
+  "minify": true,
+  "keep_vars": true,
+  "routes": [
+    {
+      "pattern": "hackyouth.id/api/*",
+      "zone_name": "hackyouth.id",
+      "custom_domain": true,
+      "enabled": true,
+      "previews_enabled": false,
+    },
+  ],
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],

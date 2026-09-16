@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nhy-site-fe",
+  "compatibility_date": "2026-09-15",
+  "assets": {
+    "directory": "./dist",
+  },
+  "keep_vars": true,
+  "routes": [
+    {
+      "pattern": "hackyouth.id",
+      "zone_name": "hackyouth.id",
+      "custom_domain": true,
+      "enabled": true,
+      "previews_enabled": false,
+    },
+  ],
+}
