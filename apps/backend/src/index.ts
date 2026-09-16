@@ -1,9 +1,18 @@
-import { Hono } from 'hono'
+import { Hono } from "hono";
+import astroEntry from "@nhy/web/server/entry.mjs";
 
-const app = new Hono()
+const app = new Hono();
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.all("*", (c) => {
+  const env = {
+    ...(c.env ?? {}),
+    // Prevents crash when c.env.ASSETS is undefined in dev mode
+    ASSETS: (c.env as Record<string, unknown> | undefined)?.ASSETS ?? {
+      fetch: () => Promise.resolve(new Response(null, { status: 404 })),
+    },
+  };
 
-export default app
+  return astroEntry.fetch(c.req.raw, env, c.executionCtx);
+});
+
+export default app;
