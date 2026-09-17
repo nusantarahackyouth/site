@@ -1,9 +1,10 @@
-import { Hono } from 'hono'
+import { HonoBase } from "./app";
+import { router } from "./routes";
 
-const app = new Hono()
+export const app = new HonoBase().basePath("/api");
+export type AppType = typeof app;
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.route("/", router);
 
-export default app
+export { router };
+export default app;
