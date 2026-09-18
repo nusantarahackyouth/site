@@ -1,7 +1,40 @@
 ---
-import Logo from "@/assets/logo.png";
+import Logo from "@/assets/logo.svg";
+import FlagEN from "@/assets/flags/en.svg";
+import FlagID from "@/assets/flags/id.svg";
 ---
 
-<nav class="w-full px-8 lg:px-24 h-16 flex justify-start items-center flex-row gap-x-16 border-b border-zinc-700">
-    <img src={Logo.src} alt="NHY Logo" id="nhy-logo" class="size-8" />
+<script>
+  const nav = document.querySelector("nav")!;
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 15) {
+      nav.style.border = "2px solid var(--border-color, #e5e7eb)";
+      nav.style.left = "1rem";
+      nav.style.right = "1rem";
+      nav.style.top = "0.5rem";
+    } else {
+      nav.style.border = "0px solid var(--border-color, #e5e7eb)";
+      nav.style.left = "0";
+      nav.style.right = "0";
+      nav.style.top = "0";
+    }
+  });
+</script>
+<nav class="fixed top-0 left-0 right-0 inner h-16 px-4 my-2 flex justify-between items-center transition-all rounded-full bg-white/80 backdrop-blur-sm duration-300">
+  <div class="flex gap-3 items-center">
+    <Logo class="size-8 invert dark:invert-0" />
+    <span class="font-jakarta-sans leading-4 font-semibold">
+      <p>Nusantara</p>
+      <p>Hack Youth</p>
+    </span>
+  </div>
+  <div class="flex gap-4 items-center text-sm font-semibold">
+    <div class="flex gap-2">
+      <a href="/">About</a>
+      <a href="/">Events</a>
+      <a href="/">Projects</a>
+      <a href="/">Support us</a>
+    </div>
+    <FlagEN class="size-6" />
+  </div>
 </nav>

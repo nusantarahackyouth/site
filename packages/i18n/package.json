@@ -1,0 +1,13 @@
+{
+  "name": "@nhy/i18n",
+  "type": "module",
+  "exports": {
+    ".": "./"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}
