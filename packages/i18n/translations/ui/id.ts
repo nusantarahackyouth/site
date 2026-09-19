@@ -11,6 +11,9 @@ export default {
   "hero.rotating.3": "pionir",
   "hero.description":
     "Kami membantu dan menjalankan perlombaan, dan membuat ruang nyaman dimana programmer muda bisa berkembang bersama-sama.",
+  "hero.cover.description":
+    "Sunbeam Jakarta, girls-only hackathon partnership bersama Hack Club. 2026",
+
   "404.title": "404 - Page Not Found",
   "404.description": "We couldn't find the page you were looking for.",
   "404.return": "Return Home",
