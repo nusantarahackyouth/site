@@ -5,22 +5,75 @@ import FlagID from "@/assets/flags/id.svg";
 ---
 
 <script>
+  import { getLang, setLang } from "@nhy/i18n";
+
   const nav = document.querySelector("nav")!;
-  window.addEventListener("scroll", () => {
+  function updateNav() {
     if (window.scrollY > 15) {
       nav.style.border = "2px solid var(--border-color, #e5e7eb)";
       nav.style.left = "1rem";
       nav.style.right = "1rem";
       nav.style.top = "0.5rem";
+      nav.style.borderRadius = "9999px";
+      nav.style.backdropFilter = "blur(4px)";
     } else {
       nav.style.border = "0px solid var(--border-color, #e5e7eb)";
       nav.style.left = "0";
       nav.style.right = "0";
       nav.style.top = "0";
+      nav.style.borderRadius = "0";
+      nav.style.backdropFilter = "none";
     }
-  });
+  }
+  updateNav();
+  window.addEventListener("scroll", updateNav);
+
+  // Language switcher: show the flag of the CURRENT language
+  const flagEN = document.getElementById("flag-en")!;
+  const flagID = document.getElementById("flag-id")!;
+  const transitionOverlay = document.getElementById("i18n-transition")!;
+
+  function updateFlags() {
+    const lang = getLang();
+    if (lang === "id") {
+      flagID.style.display = "block";
+      flagEN.style.display = "none";
+    } else {
+      flagEN.style.display = "block";
+      flagID.style.display = "none";
+    }
+  }
+
+  updateFlags();
+
+  async function switchLang(lang: "en" | "id") {
+    transitionOverlay.style.opacity = "1";
+    transitionOverlay.style.pointerEvents = "auto";
+
+    await new Promise((r) => setTimeout(r, 300));
+
+    setLang(lang);
+    updateFlags();
+
+    await new Promise((r) => setTimeout(r, 700));
+    transitionOverlay.style.opacity = "0";
+    transitionOverlay.style.pointerEvents = "none";
+  }
+
+  flagEN.addEventListener("click", () => switchLang("id"));
+  flagID.addEventListener("click", () => switchLang("en"));
+
+  // Re-sync flags when language changes (e.g. from another tab)
+  window.addEventListener("locale-change", updateFlags);
 </script>
-<nav class="fixed top-0 left-0 right-0 inner h-16 px-4 my-2 flex justify-between items-center transition-all rounded-full bg-white/80 backdrop-blur-sm duration-300">
+
+<div
+  id="i18n-transition"
+  class="fixed inset-0 bg-white z-[9999] transition-opacity duration-500"
+  style="opacity: 0; pointer-events: none;"
+></div>
+<div class="absolute top-0 h-32 pointer-events-none w-screen bg-linear-to-b from-white to-transparent z-50"></div>
+<nav class="fixed top-0 left-0 right-0 z-50 inner h-16 px-4 flex justify-between items-center transition-all duration-300">
   <div class="flex gap-3 items-center">
     <Logo class="size-8 invert dark:invert-0" />
     <span class="font-jakarta-sans leading-4 font-semibold">
@@ -30,11 +83,37 @@ import FlagID from "@/assets/flags/id.svg";
   </div>
   <div class="flex gap-4 items-center text-sm font-semibold">
     <div class="flex gap-2">
-      <a href="/">About</a>
-      <a href="/">Events</a>
-      <a href="/">Projects</a>
-      <a href="/">Support us</a>
+      <a href="/" data-i18n="nav.about">
+        About
+      </a>
+      /
+      <a href="/" data-i18n="nav.events">
+        Events
+      </a>
+      /
+      <a href="/" data-i18n="nav.projects">
+        Projects
+      </a>
+      /
+      <a href="/" data-i18n="nav.support">
+        Support us
+      </a>
     </div>
-    <FlagEN class="size-6" />
+    <div class="flex gap-1">
+      <button
+        id="flag-en"
+        class="cursor-pointer"
+        aria-label="Switch to English"
+      >
+        <FlagEN class="size-6" />
+      </button>
+      <button
+        id="flag-id"
+        class="cursor-pointer"
+        aria-label="Switch to Indonesian"
+      >
+        <FlagID class="size-6" />
+      </button>
+    </div>
   </div>
 </nav>

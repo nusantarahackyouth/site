@@ -16,17 +16,6 @@ export default defineConfig({
       },
     },
   },
-  i18n: {
-    defaultLocale: "en",
-    locales: ["en", "id"],
-    routing: {
-      prefixDefaultLocale: false,
-    },
-    domains: {
-      id: "hackyouth.id",
-      // en: "hackyouth.org"
-    },
-  },
 
   integrations: [svelte(), react()],
 });

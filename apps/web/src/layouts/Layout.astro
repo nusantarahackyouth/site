@@ -18,13 +18,28 @@ import Navbar from "@/components/Navbar.astro";
 
     <ClientRouter />
   </head>
-  <body class="pt-20">
+  <body>
     <Navbar />
     <slot />
+    <script>
+      import { getLang, swapTranslations } from "@nhy/i18n";
+
+      swapTranslations();
+      document.documentElement.classList.add("i18n-ready");
+
+      document.addEventListener("astro:after-swap", () => {
+        swapTranslations();
+        document.documentElement.classList.add("i18n-ready");
+      });
+    </script>
   </body>
 </html>
 
-<style>
+<style is:global>
+  html:not(.i18n-ready) [data-i18n] {
+    visibility: hidden;
+  }
+
   html,
   body {
     margin: 0;

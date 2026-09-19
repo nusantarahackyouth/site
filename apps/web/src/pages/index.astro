@@ -1,9 +1,57 @@
 ---
 import { rpc } from "@/lib/rpc";
 import Layout from "@/layouts/Layout.astro";
+import FaultyTerminal from "@/components/FaultyTerminal";
+import HeroRotating from "@/components/hero-rotating";
+import { Button } from "@/components/ui/button";
 
 const data = await rpc.v1.$get();
 const result = await data.json();
 ---
 
-<Layout>{JSON.stringify(result)}</Layout>
+<Layout>
+  <section class="relative h-screen lg:h-[64rem] bg-slate-100">
+    <div class="absolute inset-0 opacity-20">
+      <FaultyTerminal
+        scale={0.4}
+        digitSize={1.5}
+        scanlineIntensity={0.3}
+        glitchAmount={1.4}
+        flickerAmount={0}
+        noiseAmp={0.15}
+        chromaticAberration={0.1}
+        dither={0.3}
+        curvature={0.2}
+        tint="#000000"
+        mouseReact
+        mouseStrength={0.2}
+        brightness={0.7}
+        client:only="react"
+      />
+    </div>
+    <div class="relative z-10 flex flex-col justify-center inner gap-5 h-screen lg:h-[64rem] pointer-events-none">
+      <div class="flex flex-col font-serif tracking-tight text-6xl">
+        <HeroRotating client:load />
+        <h1 class="" data-i18n="hero.tagline.2">
+          build our generation.
+        </h1>
+      </div>
+      <p class="text-2xl max-w-[70%]" data-i18n="hero.description">
+        We support and run hackathons for teens, and create safe spaces where
+        young coders can thrive, together.
+      </p>
+      <div class="flex gap-2 items-center pointer-events-auto">
+        <Button className="rounded-full p-5 text-lg" size="lg">
+          Something
+        </Button>
+        <Button
+          className="rounded-full p-5 text-lg"
+          size="lg"
+          variant="outline"
+        >
+          Something
+        </Button>
+      </div>
+    </div>
+  </section>
+</Layout>

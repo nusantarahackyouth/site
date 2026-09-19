@@ -1,9 +1,0 @@
----
-import { rpc } from "@/lib/rpc";
-import Layout from "@/layouts/Layout.astro";
-
-const data = await rpc.v1.$get();
-const result = await data.json();
----
-
-<Layout>{JSON.stringify(result)}</Layout>
