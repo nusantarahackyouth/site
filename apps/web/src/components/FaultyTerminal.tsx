@@ -4,9 +4,7 @@ import React, {
   useRef,
   useMemo,
   useCallback,
-  useState,
 } from "react";
-import { getGPUTier } from "@pmndrs/detect-gpu";
 
 type Vec2 = [number, number];
 
@@ -298,14 +296,6 @@ export default function FaultyTerminal({
   const loadAnimationStartRef = useRef<number>(0);
   const timeOffsetRef = useRef<number>(Math.random() * 100);
   const isVisibleRef = useRef(true);
-  const [gpuTier, setGpuTier] = useState(3);
-
-  const qualityScale = useMemo(() => {
-    if (gpuTier <= 0) return 0.25;
-    if (gpuTier === 1) return 0.5;
-    if (gpuTier === 2) return 0.75;
-    return 1;
-  }, [gpuTier]);
 
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
 
@@ -323,16 +313,89 @@ export default function FaultyTerminal({
     mouseRef.current = { x, y };
   }, []);
 
+  const applyQualityScale = useCallback(
+    (qualityScale: number) => {
+      const ctn = containerRef.current;
+      const renderer = rendererRef.current;
+      const program = programRef.current;
+      if (!ctn || !renderer || !program) return;
+
+      renderer.dpr = Math.min(
+        (dpr || window.devicePixelRatio || 1) * qualityScale,
+        2,
+      );
+      renderer.setSize(
+        Math.max(2320, ctn.offsetWidth),
+        Math.max(1440, ctn.offsetHeight),
+      );
+
+      const { gl } = renderer;
+      program.uniforms.iResolution.value = new Color(
+        gl.canvas.width,
+        gl.canvas.height,
+        gl.canvas.width / gl.canvas.height,
+      );
+    },
+    [dpr],
+  );
+
+  // Decide quality tier
   useEffect(() => {
-    getGPUTier().then((result) => setGpuTier(result.tier));
-  }, []);
+    let sampleFrame = 0;
+
+    const stopBenchmark = () => {
+      cancelAnimationFrame(sampleFrame);
+    };
+
+    const startBenchmark = () => {
+      stopBenchmark();
+      if (document.hidden) return;
+
+      let frames = 0;
+      let startedAt: number | undefined;
+
+      const sample = (now: number) => {
+        if (startedAt === undefined) {
+          startedAt = now;
+          sampleFrame = requestAnimationFrame(sample);
+          return;
+        }
+
+        frames += 1;
+        const elapsed = now - startedAt;
+
+        if (elapsed < 500) {
+          sampleFrame = requestAnimationFrame(sample);
+          return;
+        }
+
+        const fps = frames / (elapsed / 1000);
+        applyQualityScale(fps < 30 ? 0.3 : fps >= 55 ? 0.75 : 0.5);
+      };
+
+      sampleFrame = requestAnimationFrame(sample);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopBenchmark();
+      else startBenchmark();
+    };
+
+    startBenchmark();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stopBenchmark();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [applyQualityScale]);
 
   useEffect(() => {
     const ctn = containerRef.current;
     if (!ctn) return;
 
     const effectiveDpr = Math.min(
-      (dpr || window.devicePixelRatio || 1) * qualityScale,
+      (dpr || window.devicePixelRatio || 1) * 0.5,
       2,
     );
     const renderer = new Renderer({
@@ -369,8 +432,8 @@ export default function FaultyTerminal({
 
         uGridMul: {
           value: new Float32Array([
-            gridMul[0] * qualityScale,
-            gridMul[1] * qualityScale,
+            gridMul[0] * 0.75,
+            gridMul[1] * 0.75,
           ]),
         },
         uDigitSize: { value: digitSize },
@@ -484,7 +547,6 @@ export default function FaultyTerminal({
     };
   }, [
     dpr,
-    qualityScale,
     pause,
     timeScale,
     scale,

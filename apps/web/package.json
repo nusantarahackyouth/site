@@ -24,7 +24,6 @@
     "@nhy/backend": "*",
     "@nhy/i18n": "*",
     "@phosphor-icons/react": "^2.1.10",
-    "@pmndrs/detect-gpu": "^6.0.22",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
