@@ -83,7 +83,9 @@ const lang = getLang();
     <ClientRouter />
   </head>
   <body>
-    <Navbar />
+    <div class="contents" transition:persist="navbar">
+      <Navbar />
+    </div>
     <slot />
     <script>
       import { getLang, swapTranslations } from "@nhy/i18n";

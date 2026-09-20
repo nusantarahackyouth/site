@@ -115,7 +115,6 @@ const lang = getLang();
   }
 
   setupNavbar();
-  document.addEventListener("astro:page-load", setupNavbar);
 </script>
 
 <div
@@ -146,19 +145,19 @@ const lang = getLang();
   </a>
   <div class="flex gap-4 items-center text-sm font-semibold">
     <div class="hidden md:flex gap-2">
-      <a href="/" data-i18n="nav.about">
+      <a href="/about" data-i18n="nav.about">
         {t("nav.about", lang)}
       </a>
       <span class="text-muted-foreground/50 select-none">/</span>
-      <a href="/" data-i18n="nav.events">
+      <a href="/events" data-i18n="nav.events">
         {t("nav.events", lang)}
       </a>
       <span class="text-muted-foreground/50 select-none">/</span>
-      <a href="/" data-i18n="nav.projects">
+      <a href="/projects" data-i18n="nav.projects">
         {t("nav.projects", lang)}
       </a>
       <span class="text-muted-foreground/50 select-none">/</span>
-      <a href="/" data-i18n="nav.support">
+      <a href="/support-us" data-i18n="nav.support">
         {t("nav.support", lang)}
       </a>
     </div>

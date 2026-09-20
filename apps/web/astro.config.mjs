@@ -6,6 +6,8 @@ import svelte from "@astrojs/svelte";
 import react from "@astrojs/react";
 import { fileURLToPath } from "node:url";
 
+import mdx from "@astrojs/mdx";
+
 // https://astro.build/config
 export default defineConfig({
   vite: {
@@ -17,5 +19,5 @@ export default defineConfig({
     },
   },
 
-  integrations: [svelte(), react()],
+  integrations: [svelte(), react(), mdx()],
 });
