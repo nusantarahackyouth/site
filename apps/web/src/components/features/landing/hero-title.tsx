@@ -23,7 +23,7 @@ export default function HeroTitle() {
           duration={4}
           animationDuration={1}
           widthTransition={[0.77, 0, 0.18, 1]}
-          className="text-primary mx-0 block text-left drop-shadow-primary"
+          className="text-primary mx-0 -my-1 block text-left drop-shadow-primary"
         />
         <span className="w-full lg:w-[unset]">{t("hero.tagline.2", locale)}</span>
       </h1>

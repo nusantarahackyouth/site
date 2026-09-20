@@ -13,18 +13,17 @@ const lang = getLang();
   const nav = document.querySelector("nav")!;
   function updateNav() {
     if (window.scrollY > 15) {
-      nav.style.border = "2px solid var(--border-color, #e5e7eb)";
-      nav.style.left = "1rem";
-      nav.style.right = "1rem";
-      nav.style.top = "0.5rem";
+      nav.style.border = "1px solid var(--color-border)";
+      nav.style.paddingInline = "2rem";
       nav.style.borderRadius = "9999px";
+      nav.style.background =
+        "color-mix(in oklab, var(--background) 20%, transparent)";
       nav.style.backdropFilter = "blur(4px)";
     } else {
-      nav.style.border = "0px solid var(--border-color, #e5e7eb)";
-      nav.style.left = "0";
-      nav.style.right = "0";
-      nav.style.top = "0";
+      nav.style.border = "1px solid transparent";
+      nav.style.paddingInline = "1rem";
       nav.style.borderRadius = "0";
+      nav.style.background = "";
       nav.style.backdropFilter = "none";
     }
   }
@@ -75,29 +74,29 @@ const lang = getLang();
   class="fixed inset-0 bg-white z-[9999] transition-opacity duration-500"
   style="opacity: 0; pointer-events: none;"
 ></div>
-<div class="absolute top-0 h-32 pointer-events-none w-screen bg-linear-to-b from-white to-transparent z-50"></div>
-<nav class="fixed top-0 left-0 right-0 z-50 inner h-16 px-4 flex justify-between items-center transition-all duration-300">
+<div class="absolute top-0 h-32 pointer-events-none w-screen bg-linear-to-b from-background to-transparent z-50"></div>
+<nav class="fixed top-2 left-0 right-0 z-50 inner h-16 px-4 flex justify-between items-center transition-all duration-300">
   <div class="flex gap-3 items-center">
     <Logo class="size-8 invert dark:invert-0" />
     <span class="font-jakarta-sans leading-4 font-semibold">
-      <p>Nusantara</p>
-      <p>Hack Youth</p>
+      <p class="text-primary">Nusantara</p>
+      <p class="font-bold">Hack Youth</p>
     </span>
   </div>
   <div class="flex gap-4 items-center text-sm font-semibold">
-    <div class="flex gap-2">
+    <div class="hidden md:flex gap-2">
       <a href="/" data-i18n="nav.about">
         {t("nav.about", lang)}
       </a>
-      /
+      <span class="text-muted-foreground/50">/</span>
       <a href="/" data-i18n="nav.events">
         {t("nav.events", lang)}
       </a>
-      /
+      <span class="text-muted-foreground/50">/</span>
       <a href="/" data-i18n="nav.projects">
         {t("nav.projects", lang)}
       </a>
-      /
+      <span class="text-muted-foreground/50">/</span>
       <a href="/" data-i18n="nav.support">
         {t("nav.support", lang)}
       </a>

@@ -129,14 +129,55 @@ html, body {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
+  HTML, body {
+    @apply bg-background text-foreground font-sans;
   }
 
   .inner {
     @apply mx-auto max-w-[90vw] lg:max-w-3xl xl:max-w-4xl 2xl:max-w-7xl;
+  }
+}
+
+@layer utilities {
+  .shimmer,
+  .shimmer-hover:hover {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(255 255 255 / 3%) 20%,
+      rgb(255 255 255 / 15%) 50%,
+      rgb(255 255 255 / 3%) 80%,
+      transparent 100%
+    );
+    background-position: 133.333333% 0;
+    background-size: 400% 100%;
+    background-repeat: repeat-x;
+    animation: shimmer 2s linear infinite;
+  }
+
+  .bg-primary.shimmer,
+  .bg-primary.shimmer-hover:hover {
+      background-image: repeating-linear-gradient(
+        90deg,
+        transparent 0%,
+        rgb(255 255 255 / 12%) 20%,
+        rgb(255 255 255 / 28%) 50%,
+        rgb(255 255 255 / 12%) 80%,
+        transparent 100%
+      );
+      background-position: 133.333333% 0;
+      background-size: 400% 100%;
+      background-repeat: repeat-x;
+      animation: shimmer 2s linear infinite;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 133.333333% 0;
+  }
+
+  to {
+    background-position: 0 0;
   }
 }

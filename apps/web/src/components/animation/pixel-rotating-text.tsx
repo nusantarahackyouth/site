@@ -30,6 +30,7 @@ export type RotatingPixelTextProps = {
   animationDuration?: number;
   widthTransition?: CubicBezier;
   className?: string;
+  textClassName?: string;
   alignmentClassName?: string;
 };
 
@@ -139,6 +140,7 @@ type PixelMaskLayerProps = {
   direction: "in" | "out";
   grid: PixelGrid;
   alignmentClassName: string;
+  textClassName?: string;
   startDelay?: number;
 };
 
@@ -147,6 +149,7 @@ function PixelMaskLayer({
   direction,
   grid,
   alignmentClassName,
+  textClassName,
   startDelay = 0,
 }: PixelMaskLayerProps) {
   const initialOpacity = direction === "out" ? 1 : 0;
@@ -160,6 +163,7 @@ function PixelMaskLayer({
           className={cn(
             "absolute inset-0 flex py-4 whitespace-nowrap will-change-[opacity]",
             alignmentClassName,
+            textClassName,
           )}
           style={{ clipPath: cell.clipPath }}
           initial={{ opacity: initialOpacity }}
@@ -183,6 +187,7 @@ type PixelTransitionCanvasProps = {
   animationDuration: number;
   incomingDelay: number;
   alignmentClassName: string;
+  textClassName?: string;
 };
 
 const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
@@ -191,6 +196,7 @@ const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
   animationDuration,
   incomingDelay,
   alignmentClassName,
+  textClassName,
 }: PixelTransitionCanvasProps) {
   const canvasRef = useRef<HTMLSpanElement>(null);
   const [dimensions, setDimensions] = useState<PixelGridDimensions | null>(
@@ -245,12 +251,14 @@ const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
               direction="out"
               grid={grid}
               alignmentClassName={alignmentClassName}
+              textClassName={textClassName}
             />
             <PixelMaskLayer
               text={incomingText}
               direction="in"
               grid={grid}
               alignmentClassName={alignmentClassName}
+              textClassName={textClassName}
               startDelay={incomingDelay}
             />
           </>
@@ -273,6 +281,7 @@ export function RotatingPixelText({
   animationDuration = 1,
   widthTransition = DEFAULT_WIDTH_TRANSITION,
   className = "",
+  textClassName,
   alignmentClassName = "justify-start",
 }: RotatingPixelTextProps) {
   const [rotation, setRotation] = useState<RotationState>({
@@ -438,6 +447,7 @@ export function RotatingPixelText({
         className={cn(
           "absolute inset-x-0 top-0 flex whitespace-nowrap",
           alignmentClassName,
+          textClassName,
         )}
         style={{
           opacity: !isTransitioning || rotation.isHandoff ? 1 : 0,
@@ -454,6 +464,7 @@ export function RotatingPixelText({
           animationDuration={maskAnimationDuration}
           incomingDelay={incomingDelay}
           alignmentClassName={alignmentClassName}
+          textClassName={textClassName}
         />
       )}
     </motion.span>

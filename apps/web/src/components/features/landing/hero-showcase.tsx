@@ -59,7 +59,7 @@ export default function HeroShowcase({ className }: HeroShowcaseProps) {
     >
       <PixelSwap
         ref={swapRef}
-        className="h-96 w-160 max-w-[calc(100vw-2rem)]"
+        className="w-full md:w-160 h-72 md:h-96"
         aspectRatio="auto"
         pixelSize={16}
         pixelScale={1}

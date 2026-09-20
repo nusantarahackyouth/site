@@ -31,9 +31,9 @@ const lang = getLang();
         brightness={0.7}
         client:only="react"
       /> -->
-      <div class="absolute bottom-0 left-[50%] translate-x-[-50%] bg-red-600/80 h-[24rem] rounded-t-full w-[80vw] blur-[6rem]" />
+      <div class="absolute bottom-0 left-[50%] translate-x-[-50%] bg-red-600/50 h-96 rounded-t-full w-[80vw] blur-[6rem]" />
     </div>
-    <div class="relative z-20 flex flex-col items-center justify-center inner gap-6 min-h-screen py-20 pb-[10%]">
+    <div class="relative z-20 flex flex-col items-center justify-center inner gap-6 py-48 pb-40">
       <HeroTitle client:load />
       <p
         class="text-lg sm:text-xl max-w-2xl text-center text-muted-foreground"
@@ -42,7 +42,10 @@ const lang = getLang();
         {t("hero.description", lang)}
       </p>
       <div class="flex gap-2 items-center pointer-events-auto">
-        <Button className="rounded-full p-5 text-lg" size="lg">
+        <Button
+          className="rounded-full p-5 text-lg shimmer-hover hover:bg-primary cursor-pointer"
+          size="lg"
+        >
           Something
         </Button>
         <Button
@@ -54,7 +57,7 @@ const lang = getLang();
         </Button>
       </div>
     </div>
-    <div class="relative z-20 mt-[-25vh] flex flex-col items-center drop-shadow-2xl">
+    <div class="relative z-20 px-8 flex flex-col items-center drop-shadow-2xl">
       <HeroShowcase client:load />
     </div>
   </section>
