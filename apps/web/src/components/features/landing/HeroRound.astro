@@ -22,21 +22,36 @@ import Round from "@/assets/round.svg";
 </div>
 
 <script>
-  const heroRound = document.querySelector<HTMLElement>("[data-hero-round]");
+  let parallaxController: AbortController | undefined;
   let animationFrame = 0;
 
-  const updateParallax = () => {
+  function setupHeroRound() {
+    parallaxController?.abort();
+    cancelAnimationFrame(animationFrame);
     animationFrame = 0;
+
+    const heroRound = document.querySelector<HTMLElement>("[data-hero-round]");
     if (!heroRound) return;
 
-    heroRound.style.transform = `translate3d(0, ${window.scrollY * 0.5}px, 0)`;
-  };
+    parallaxController = new AbortController();
 
-  const requestParallaxUpdate = () => {
-    if (animationFrame) return;
-    animationFrame = requestAnimationFrame(updateParallax);
-  };
+    const updateParallax = () => {
+      animationFrame = 0;
+      heroRound.style.transform = `translate3d(0, ${window.scrollY * 0.5}px, 0)`;
+    };
 
-  updateParallax();
-  window.addEventListener("scroll", requestParallaxUpdate, { passive: true });
+    const requestParallaxUpdate = () => {
+      if (animationFrame) return;
+      animationFrame = requestAnimationFrame(updateParallax);
+    };
+
+    updateParallax();
+    window.addEventListener("scroll", requestParallaxUpdate, {
+      passive: true,
+      signal: parallaxController.signal,
+    });
+  }
+
+  setupHeroRound();
+  document.addEventListener("astro:page-load", setupHeroRound);
 </script>
