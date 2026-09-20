@@ -1,8 +1,14 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "@/layouts/Layout.astro";
+import { getLang, t } from "@nhy/i18n";
+
+const lang = getLang();
 ---
+
 <Layout>
-  <h1 data-i18n="404.title">404 - Page Not Found</h1>
-  <p data-i18n="404.description">We couldn't find the page you were looking for.</p>
-  <a href="/" data-i18n="404.return">Return Home</a>
+  <h1 data-i18n="404.title">{t("404.title", lang)}</h1>
+  <p data-i18n="404.description">{t("404.description", lang)}</p>
+  <a href="/" data-i18n="404.return">
+    {t("404.return", lang)}
+  </a>
 </Layout>
