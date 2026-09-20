@@ -20,14 +20,17 @@ const lang = getLang();
 
     <script>
       (() => {
-        const a = localStorage.getItem("@nhy/theme"),
-          b =
-            "light" === a || "dark" === a
-              ? a
-              : matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light";
-        document.documentElement.classList.toggle("dark", "dark" === b);
+        function applyTheme() {
+          const a = localStorage.getItem("@nhy/theme"),
+            b =
+              "light" === a || "dark" === a
+                ? a
+                : matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light";
+          document.documentElement.classList.toggle("dark", "dark" === b);
+        }
+        applyTheme();
       })();
     </script>
     <ClientRouter />
@@ -36,14 +39,49 @@ const lang = getLang();
     <Navbar />
     <slot />
     <script>
-      import { getLang, swapTranslations } from "@nhy/i18n";
+      import { swapTranslations, subscribeLocale, getLang } from "@nhy/i18n";
+
+      function applyTheme() {
+        const a = localStorage.getItem("@nhy/theme"),
+          b =
+            "light" === a || "dark" === a
+              ? a
+              : matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+        document.documentElement.classList.toggle("dark", "dark" === b);
+      }
+
+      function updateFlags() {
+        const lang = getLang();
+        const flagEN = document.getElementById("flag-en");
+        const flagID = document.getElementById("flag-id");
+        if (!flagEN || !flagID) return;
+        if (lang === "id") {
+          flagID.style.display = "block";
+          flagEN.style.display = "none";
+        } else {
+          flagEN.style.display = "block";
+          flagID.style.display = "none";
+        }
+      }
 
       swapTranslations();
+      applyTheme();
+      updateFlags();
       document.documentElement.classList.add("i18n-ready");
 
       document.addEventListener("astro:after-swap", () => {
         swapTranslations();
+        applyTheme();
+        updateFlags();
         document.documentElement.classList.add("i18n-ready");
+      });
+
+      subscribeLocale(() => {
+        swapTranslations();
+        applyTheme();
+        updateFlags();
       });
     </script>
   </body>

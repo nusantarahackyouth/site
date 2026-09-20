@@ -10,27 +10,31 @@ const lang = getLang();
 <script>
   import { getLang, setLang } from "@nhy/i18n";
 
-  const nav = document.querySelector("nav")!;
-  function updateNav() {
-    if (window.scrollY > 15) {
-      nav.style.border = "1px solid var(--color-border)";
-      nav.style.paddingInline = "2rem";
-      nav.style.borderRadius = "9999px";
-      nav.style.background =
-        "color-mix(in oklab, var(--background) 20%, transparent)";
-      nav.style.backdropFilter = "blur(4px)";
-    } else {
-      nav.style.border = "1px solid transparent";
-      nav.style.paddingInline = "1rem";
-      nav.style.borderRadius = "0";
-      nav.style.background = "";
-      nav.style.backdropFilter = "none";
+  function initNavbar() {
+    const nav = document.querySelector("nav");
+    if (!nav) return;
+    const h = nav as HTMLElement;
+    function updateNav() {
+      if (window.scrollY > 15) {
+        h.style.border = "1px solid var(--color-border)";
+        h.style.paddingInline = "2rem";
+        h.style.borderRadius = "9999px";
+        h.style.background =
+          "color-mix(in oklab, var(--background) 20%, transparent)";
+        h.style.backdropFilter = "blur(4px)";
+      } else {
+        h.style.border = "1px solid transparent";
+        h.style.paddingInline = "1rem";
+        h.style.borderRadius = "0";
+        h.style.background = "";
+        h.style.backdropFilter = "none";
+      }
     }
+    updateNav();
+    window.addEventListener("scroll", updateNav);
   }
-  updateNav();
-  window.addEventListener("scroll", updateNav);
+  initNavbar();
 
-  // Language switcher: show the flag of the CURRENT language
   const flagEN = document.getElementById("flag-en")!;
   const flagID = document.getElementById("flag-id")!;
   const transitionOverlay = document.getElementById("i18n-transition")!;
@@ -64,9 +68,6 @@ const lang = getLang();
 
   flagEN.addEventListener("click", () => switchLang("id"));
   flagID.addEventListener("click", () => switchLang("en"));
-
-  // Re-sync flags when language changes (e.g. from another tab)
-  window.addEventListener("locale-change", updateFlags);
 </script>
 
 <div
@@ -76,28 +77,28 @@ const lang = getLang();
 ></div>
 <div class="absolute top-0 h-32 pointer-events-none w-screen bg-linear-to-b from-background to-transparent z-50"></div>
 <nav class="fixed top-2 left-0 right-0 z-50 inner h-16 px-4 flex justify-between items-center transition-all duration-300">
-  <div class="flex gap-3 items-center">
+  <a href="/" class="flex gap-3 items-center">
     <Logo class="size-8 invert dark:invert-0" />
     <span class="font-jakarta-sans leading-4 font-semibold">
       <p class="text-primary">Nusantara</p>
       <p class="font-bold">Hack Youth</p>
     </span>
-  </div>
+  </a>
   <div class="flex gap-4 items-center text-sm font-semibold">
     <div class="hidden md:flex gap-2">
-      <a href="/" data-i18n="nav.about">
+      <a href="/about" data-i18n="nav.about">
         {t("nav.about", lang)}
       </a>
       <span class="text-muted-foreground/50">/</span>
-      <a href="/" data-i18n="nav.events">
+      <a href="/events" data-i18n="nav.events">
         {t("nav.events", lang)}
       </a>
       <span class="text-muted-foreground/50">/</span>
-      <a href="/" data-i18n="nav.projects">
+      <a href="/projects" data-i18n="nav.projects">
         {t("nav.projects", lang)}
       </a>
       <span class="text-muted-foreground/50">/</span>
-      <a href="/" data-i18n="nav.support">
+      <a href="/support-us" data-i18n="nav.support">
         {t("nav.support", lang)}
       </a>
     </div>
