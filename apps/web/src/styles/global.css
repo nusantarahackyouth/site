@@ -41,7 +41,7 @@
   --sidebar-ring: oklch(0.599105 0.230687 24.443);
 }
 .dark {
-  --background: oklch(0.201053 0.003945 286.04);
+  --background: oklch(0.223 0 285.76);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);

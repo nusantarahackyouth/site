@@ -6,9 +6,11 @@ const lang = getLang();
 ---
 
 <Layout>
-  <h1 data-i18n="404.title">{t("404.title", lang)}</h1>
-  <p data-i18n="404.description">{t("404.description", lang)}</p>
-  <a href="/" data-i18n="404.return">
-    {t("404.return", lang)}
-  </a>
+  <section class="w-full min-h-screen flex justify-center items-center flex-col gap-y-4">
+    <h1 data-i18n="404.title">{t("404.title", lang)}</h1>
+    <p data-i18n="404.description">{t("404.description", lang)}</p>
+    <a href="/" data-i18n="404.return">
+      {t("404.return", lang)}
+    </a>
+  </section>
 </Layout>

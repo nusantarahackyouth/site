@@ -19,17 +19,67 @@ const lang = getLang();
     <title>Nusantara Hack Youth</title>
 
     <script>
-      (() => {
-        const a = localStorage.getItem("@nhy/theme"),
-          b =
-            "light" === a || "dark" === a
-              ? a
-              : matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light";
-        document.documentElement.classList.toggle("dark", "dark" === b);
-      })();
+      const storedTheme = localStorage.getItem("@nhy/theme");
+      const theme =
+        storedTheme === "light" || storedTheme === "dark"
+          ? storedTheme
+          : matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+
+      document.documentElement.classList.toggle("dark", theme === "dark");
+
+      document.addEventListener("astro:before-swap", (event) => {
+        const isDark = document.documentElement.classList.contains("dark");
+        event.newDocument.documentElement.classList.toggle("dark", isDark);
+      });
+
+      document.addEventListener(
+        "click",
+        (event) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+
+          const link = target.closest<HTMLAnchorElement>("a[href]");
+          if (
+            !link ||
+            link.download ||
+            (link.target && link.target !== "_self")
+          ) {
+            return;
+          }
+
+          const destination = new URL(link.href, window.location.href);
+          if (
+            destination.origin === window.location.origin &&
+            destination.pathname === window.location.pathname &&
+            destination.search === window.location.search &&
+            destination.hash === window.location.hash
+          ) {
+            event.preventDefault();
+          }
+        },
+        { capture: true },
+      );
     </script>
+    <link
+      rel="preload"
+      href="%sveltekit.assets%/logo.webm"
+      as="video"
+      type="video/webm"
+    />
+
     <ClientRouter />
   </head>
   <body>

@@ -5,7 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
-  useSyncExternalStore,
+  type ReactNode,
 } from "react";
 
 import PixelSwap, {
@@ -13,7 +13,6 @@ import PixelSwap, {
 } from "@/components/animation/pixel-swap";
 
 import { cn } from "@/lib/utils";
-import { defaultLocale, getLang, subscribeLocale, t } from "@nhy/i18n";
 
 const SHOWCASE_INTERVAL = 5_000;
 
@@ -26,93 +25,108 @@ export type HeroShowcaseImage = {
 };
 
 type HeroShowcaseProps = {
-  images: HeroShowcaseImage[];
+  src: HeroShowcaseImage | HeroShowcaseImage[];
   className?: string;
+  imageClassName?: string;
+  children?: ReactNode;
 };
 
-const getServerLocale = () => defaultLocale;
-
-export default function HeroShowcase({ images, className }: HeroShowcaseProps) {
-  const locale = useSyncExternalStore(
-    subscribeLocale,
-    getLang,
-    getServerLocale,
-  );
+export default function HeroShowcase({
+  src,
+  className,
+  imageClassName,
+  children,
+}: HeroShowcaseProps) {
+  const images = Array.isArray(src) ? src : [src];
+  const isAnimated = images.length > 1;
   const swapRef = useRef<PixelSwapHandle>(null);
   const loadedImagesRef = useRef(new Set<number>());
   const [paused, setPaused] = useState(false);
-  const [imagesReady, setImagesReady] = useState(false);
+  const [imagesReady, setImagesReady] = useState(!isAnimated);
 
-  const markImageReady = useCallback((index: number) => {
-    if (loadedImagesRef.current.has(index)) return;
+  const markImageReady = useCallback(
+    (index: number) => {
+      if (loadedImagesRef.current.has(index)) return;
 
-    loadedImagesRef.current.add(index);
-    if (loadedImagesRef.current.size === images.length) {
-      setImagesReady(true);
-    }
-  }, []);
+      loadedImagesRef.current.add(index);
+      if (loadedImagesRef.current.size === images.length) {
+        setImagesReady(true);
+      }
+    },
+    [images.length],
+  );
 
   useEffect(() => {
-    if (paused || !imagesReady) return;
+    if (!isAnimated || paused || !imagesReady) return;
 
     const interval = setInterval(() => {
       swapRef.current?.swap();
     }, SHOWCASE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [imagesReady, paused]);
+  }, [imagesReady, isAnimated, paused]);
+
+  const renderImage = (image: HeroShowcaseImage, index: number) => (
+    <img
+      key={image.src}
+      src={image.src}
+      srcSet={image.srcSet}
+      sizes="(min-width: 768px) 640px, calc(100vw - 4rem)"
+      alt={image.alt}
+      width={image.width}
+      height={image.height}
+      className={cn(
+        "w-full object-cover object-center",
+        isAnimated ? "h-full" : "h-72 md:h-96 md:w-160",
+        imageClassName,
+      )}
+      loading={index === 0 ? "eager" : "lazy"}
+      fetchPriority={index === 0 ? "high" : "auto"}
+      decoding="async"
+      onLoad={isAnimated ? () => markImageReady(index) : undefined}
+      ref={
+        isAnimated
+          ? (element) => {
+              if (element?.complete && element.naturalWidth) {
+                markImageReady(index);
+              }
+            }
+          : undefined
+      }
+    />
+  );
 
   return (
     <span
       className={cn(
-        "flex -rotate-1 flex-col gap-4 bg-white p-4 pb-10 text-black antialiased transition-[scale] hover:scale-105",
+        "flex flex-col gap-4 bg-white p-4 pb-10 text-black antialiased drop-shadow",
         className,
       )}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
+      onMouseEnter={isAnimated ? () => setPaused(true) : undefined}
+      onMouseLeave={isAnimated ? () => setPaused(false) : undefined}
+      onFocusCapture={isAnimated ? () => setPaused(true) : undefined}
+      onBlurCapture={isAnimated ? () => setPaused(false) : undefined}
     >
-      <PixelSwap
-        ref={swapRef}
-        className="h-72 w-full md:h-96 md:w-160"
-        aspectRatio="auto"
-        pixelSize={16}
-        pixelScale={1}
-        duration={1500}
-        pixelDuration={600}
-        pattern="bottom-to-top"
-        randomness={0.3}
-        fade
-        renderMode="canvas"
-      >
-        {() =>
-          images.map(({ src, srcSet, width, height, alt }, index) => (
-            <img
-              key={src}
-              src={src}
-              srcSet={srcSet}
-              sizes="(min-width: 768px) 640px, calc(100vw - 4rem)"
-              alt={alt}
-              width={width}
-              height={height}
-              className="h-full w-full object-cover object-center"
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              decoding="async"
-              onLoad={() => markImageReady(index)}
-              ref={(image) => {
-                if (image?.complete && image.naturalWidth) {
-                  markImageReady(index);
-                }
-              }}
-            />
-          ))
-        }
-      </PixelSwap>
-      <p className="text-center font-serif italic">
-        {t("hero.cover.description", locale)}
-      </p>
+      {isAnimated ? (
+        <PixelSwap
+          ref={swapRef}
+          className="h-72 w-full md:h-96 md:w-160"
+          aspectRatio="auto"
+          pixelSize={16}
+          pixelScale={1}
+          duration={1500}
+          pixelDuration={600}
+          pattern="bottom-to-top"
+          randomness={0.3}
+          fade
+          renderMode="canvas"
+        >
+          {() => images.map(renderImage)}
+        </PixelSwap>
+      ) : (
+        images[0] && renderImage(images[0], 0)
+      )}
+      {children}
     </span>
   );
 }

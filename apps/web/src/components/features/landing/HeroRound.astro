@@ -1,0 +1,42 @@
+---
+import Round from "@/assets/round.svg";
+---
+
+<div
+  data-hero-round
+  aria-hidden="true"
+  class="absolute h-screen w-full overflow-clip will-change-transform"
+>
+  <img
+    src={Round.src}
+    alt=""
+    class="absolute top-[15%] left-[50%] w-[170vw] max-w-none translate-x-[-50%] animate-spin select-none"
+    style="animation-duration:180s;animation-direction:reverse;"
+  />
+  <img
+    src={Round.src}
+    alt=""
+    class="absolute top-[40%] left-[50%] w-[140vw] max-w-none translate-x-[-50%] animate-spin select-none"
+    style="animation-duration:120s"
+  />
+</div>
+
+<script>
+  const heroRound = document.querySelector<HTMLElement>("[data-hero-round]");
+  let animationFrame = 0;
+
+  const updateParallax = () => {
+    animationFrame = 0;
+    if (!heroRound) return;
+
+    heroRound.style.transform = `translate3d(0, ${window.scrollY * 0.5}px, 0)`;
+  };
+
+  const requestParallaxUpdate = () => {
+    if (animationFrame) return;
+    animationFrame = requestAnimationFrame(updateParallax);
+  };
+
+  updateParallax();
+  window.addEventListener("scroll", requestParallaxUpdate, { passive: true });
+</script>

@@ -1,6 +1,7 @@
 ---
 import { rpc } from "@/lib/rpc";
 import Layout from "@/layouts/Layout.astro";
+import HeroRound from "@/components/features/landing/HeroRound.astro";
 import HeroShowcase from "@/components/features/landing/hero-showcase";
 import HeroTitle from "@/components/features/landing/hero-title";
 import { Button } from "@/components/ui/button";
@@ -10,44 +11,82 @@ import { getImage } from "astro:assets";
 import Sunbeam01 from "@/assets/photography/sunbeam-jakarta-26/photo-01.jpg";
 import Sunbeam02 from "@/assets/photography/sunbeam-jakarta-26/photo-02.jpg";
 import Sunbeam03 from "@/assets/photography/sunbeam-jakarta-26/photo-03.jpg";
+import Daydream01 from "@/assets/photography/daydream-jakarta-26/photo-01.jpg";
+import Campfire01 from "@/assets/photography/campfire-jakarta-26/photo-01.jpg";
+import Campfire02 from "@/assets/photography/campfire-jakarta-26/photo-02.jpg";
+import Campfire03 from "@/assets/photography/campfire-jakarta-26/photo-03.jpg";
 
-// Add assets to optimize, and pass to HeroShowcase
-const showcaseSources = [
+type ShowcaseSource = {
+  source: typeof Sunbeam01;
+  alt: string;
+};
+
+const sunbeamSources: ShowcaseSource[] = [
   { source: Sunbeam01, alt: "Sunbeam Jakarta gathering" },
   { source: Sunbeam02, alt: "Sunbeam Jakarta participants" },
   { source: Sunbeam03, alt: "Sunbeam Jakarta activities" },
 ];
-const showcaseImages = await Promise.all(
-  showcaseSources.map(async ({ source, alt }) => {
-    const widths = [
-      ...new Set(
-        [640, 960, 1280].map((width) => Math.min(width, source.width)),
-      ),
-    ];
-    const variants = await Promise.all(
-      widths.map(async (width) => ({
-        width,
-        image: await getImage({
-          src: source,
-          width,
-          format: "webp",
-          quality: 90,
-        }),
-      })),
-    );
-    const largest = variants.at(-1)!;
 
-    return {
-      src: largest.image.src,
-      srcSet: variants
-        .map(({ image, width }) => `${image.src} ${width}w`)
-        .join(", "),
-      width: largest.width,
-      height: Math.round((source.height / source.width) * largest.width),
-      alt,
-    };
-  }),
-);
+const daydreamSources: ShowcaseSource[] = [
+  {
+    source: Daydream01,
+    alt: "Participant using a virtual reality headset at Daydream Jakarta",
+  },
+];
+
+const campfireSources: ShowcaseSource[] = [
+  {
+    source: Campfire01,
+    alt: "Campfire Jakarta participants posing together after a workshop",
+  },
+  {
+    source: Campfire02,
+    alt: "Three Campfire Jakarta participants collaborating on a laptop",
+  },
+  {
+    source: Campfire03,
+    alt: "Speaker addressing attendees at Campfire Jakarta",
+  },
+];
+
+const optimizeShowcaseImages = (sources: ShowcaseSource[]) =>
+  Promise.all(
+    sources.map(async ({ source, alt }) => {
+      const widths = [
+        ...new Set(
+          [640, 960, 1280].map((width) => Math.min(width, source.width)),
+        ),
+      ];
+      const variants = await Promise.all(
+        widths.map(async (width) => ({
+          width,
+          image: await getImage({
+            src: source,
+            width,
+            format: "webp",
+            quality: 90,
+          }),
+        })),
+      );
+      const largest = variants.at(-1)!;
+
+      return {
+        src: largest.image.src,
+        srcSet: variants
+          .map(({ image, width }) => `${image.src} ${width}w`)
+          .join(", "),
+        width: largest.width,
+        height: Math.round((source.height / source.width) * largest.width),
+        alt,
+      };
+    }),
+  );
+
+const [sunbeamImages, daydreamImages, campfireImages] = await Promise.all([
+  optimizeShowcaseImages(sunbeamSources),
+  optimizeShowcaseImages(daydreamSources),
+  optimizeShowcaseImages(campfireSources),
+]);
 
 const data = await rpc.v1.$get();
 const result = await data.json();
@@ -55,25 +94,40 @@ const lang = getLang();
 ---
 
 <Layout>
-  <section class="relative min-h-screen pb-40">
+  <section class="relative h-screen border-b border-border bg-[#f8f8f8] dark:bg-[#161618]">
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <!-- <FaultyTerminal
-        scale={0.4}
-        digitSize={1.5}
-        scanlineIntensity={0.3}
-        glitchAmount={1.4}
-        flickerAmount={0}
-        noiseAmp={0.15}
-        chromaticAberration={0.1}
-        dither={0.3}
-        curvature={0.2}
-        tint="#dddddd"
-        mouseReact
-        mouseStrength={0.2}
-        brightness={0.7}
-        client:only="react"
-      /> -->
-      <div class="absolute bottom-0 left-[50%] translate-x-[-50%] bg-red-600/50 h-96 rounded-t-full w-[80vw] blur-[6rem]" />
+      <HeroRound />
+      <div class="absolute -bottom-8 left-[50%] translate-x-[-50%] bg-red-600/40 h-96 rounded-t-full w-[80vw] blur-[6rem]" />
+    </div>
+    <div class="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+      <div class="hidden lg:block pointer-events-auto absolute -bottom-30 left-10 scale-90 translate-y-0 transition-transform hover:-translate-y-20">
+        <HeroShowcase
+          src={daydreamImages[0]}
+          className="group rotate-2"
+          imageClassName="grayscale-[90%] transition-[filter] group-hover:grayscale-0"
+        >
+          <p
+            class="text-center font-serif italic"
+            data-i18n="hero.cover.daydream.description"
+          >
+            {t("hero.cover.daydream.description", lang)}
+          </p>
+        </HeroShowcase>
+      </div>
+      <div class="hidden lg:block pointer-events-auto absolute -bottom-30 right-10 scale-90 translate-y-0 transition-transform hover:-translate-y-20">
+        <HeroShowcase
+          src={campfireImages[0]}
+          className="group -rotate-2"
+          imageClassName="grayscale-[90%] transition-[filter] group-hover:grayscale-0"
+        >
+          <p
+            class="text-center font-serif italic"
+            data-i18n="hero.cover.campfire.description"
+          >
+            {t("hero.cover.campfire.description", lang)}
+          </p>
+        </HeroShowcase>
+      </div>
     </div>
     <div class="relative z-20 flex flex-col items-center justify-center inner gap-6 py-48 pb-40">
       <HeroTitle client:load />
@@ -99,8 +153,21 @@ const lang = getLang();
         </Button>
       </div>
     </div>
-    <div class="relative z-20 px-8 flex flex-col items-center drop-shadow-2xl">
-      <HeroShowcase images={showcaseImages} client:load />
+    <div class="pointer-events-none relative z-20 flex flex-col items-center px-8 drop-shadow-2xl">
+      <HeroShowcase
+        src={sunbeamImages}
+        className="pointer-events-auto -rotate-1 drop-shadow-xl transition-[scale] hover:scale-105"
+        client:load
+      >
+        <p
+          class="text-center font-serif italic"
+          data-i18n="hero.cover.sunbeam.description"
+        >
+          {t("hero.cover.sunbeam.description", lang)}
+        </p>
+      </HeroShowcase>
     </div>
   </section>
+  <div class="w-full h-64"></div>
+  <div class="w-full h-32"></div>
 </Layout>
