@@ -2,20 +2,20 @@
 import { rpc } from "@/lib/rpc";
 import Layout from "@/layouts/Layout.astro";
 import FaultyTerminal from "@/components/FaultyTerminal";
-import HeroRotating from "@/components/hero-rotating";
+import HeroShowcase from "@/components/features/landing/hero-showcase";
+import HeroTitle from "@/components/features/landing/hero-title";
 import { Button } from "@/components/ui/button";
-
-import Sunbeam01 from "@/assets/photography/sunbeam-jakarta-26/photo-01.jpg";
-import { Image } from "astro:assets";
+import { getLang, t } from "@nhy/i18n";
 
 const data = await rpc.v1.$get();
 const result = await data.json();
+const lang = getLang();
 ---
 
 <Layout>
-  <section class="relative h-screen lg:h-[64rem] bg-slate-100">
-    <div class="absolute inset-0 opacity-20 overflow-hidden">
-      <FaultyTerminal
+  <section class="relative min-h-screen pb-40">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <!-- <FaultyTerminal
         scale={0.4}
         digitSize={1.5}
         scanlineIntensity={0.3}
@@ -25,24 +25,21 @@ const result = await data.json();
         chromaticAberration={0.1}
         dither={0.3}
         curvature={0.2}
-        tint="#000000"
+        tint="#dddddd"
         mouseReact
         mouseStrength={0.2}
         brightness={0.7}
         client:only="react"
-      />
+      /> -->
       <div class="absolute bottom-0 left-[50%] translate-x-[-50%] bg-red-600/80 h-[24rem] rounded-t-full w-[80vw] blur-[6rem]" />
     </div>
-    <div class="relative z-20 flex flex-col items-center justify-center inner gap-5 h-screen lg:h-[64rem] pointer-events-none pb-[20%]">
-      <div class="flex flex-col font-serif tracking-tight text-center text-6xl">
-        <HeroRotating client:load />
-        <h1 class="" data-i18n="hero.tagline.2">
-          build our generation.
-        </h1>
-      </div>
-      <p class="text-xl max-w-[70%] text-center" data-i18n="hero.description">
-        We support and run hackathons for teens, and create safe spaces where
-        young coders can thrive, together.
+    <div class="relative z-20 flex flex-col items-center justify-center inner gap-6 min-h-screen py-20 pb-[10%]">
+      <HeroTitle client:load />
+      <p
+        class="text-lg sm:text-xl max-w-2xl text-center text-muted-foreground"
+        data-i18n="hero.description"
+      >
+        {t("hero.description", lang)}
       </p>
       <div class="flex gap-2 items-center pointer-events-auto">
         <Button className="rounded-full p-5 text-lg" size="lg">
@@ -57,21 +54,8 @@ const result = await data.json();
         </Button>
       </div>
     </div>
-    <div class="absolute bottom-[-15%] -rotate-1 left-0 right-0 flex drop-shadow-2xl flex-col items-center pointer-events-none">
-      <span class="p-4.5 pb-10 bg-white flex flex-col gap-6">
-        <Image
-          src={Sunbeam01}
-          alt="Sunbeam"
-          class="w-[50vw] h-[38rem] object-center object-cover"
-        />
-        <p
-          class="font-serif text-center italic"
-          data-i18n="hero.cover.description"
-        >
-          Sunbeam Jakarta, a girls-only hackathon in partnership with Hack Club.
-          2026
-        </p>
-      </span>
+    <div class="relative z-20 mt-[-25vh] flex flex-col items-center drop-shadow-2xl">
+      <HeroShowcase client:load />
     </div>
   </section>
 </Layout>

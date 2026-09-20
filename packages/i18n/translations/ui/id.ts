@@ -3,14 +3,11 @@ export default {
   "nav.events": "Acara",
   "nav.projects": "Projek",
   "nav.support": "Dukung kami",
-  "hero.tagline.1a": "tempat dimana",
-  "hero.tagline.1b": "muda",
-  "hero.tagline.2": "membangun generasi.",
-  "hero.rotating.1": "inovator",
-  "hero.rotating.2": "pelopor",
-  "hero.rotating.3": "pionir",
+  "hero.tagline.1": "Tempat anak muda",
+  "hero.tagline.2": "membangun generasi kita.",
+  "hero.rotating": ["berkarya", "berkreasi", "berinovasi"],
   "hero.description":
-    "Kami membantu dan menjalankan perlombaan, dan membuat ruang nyaman dimana programmer muda bisa berkembang bersama-sama.",
+    "Kami mendukung dan menyelenggarakan hackathon untuk anak muda, serta memberikan ruang untuk belajar, berkarya, dan berkembang bersama.",
   "hero.cover.description":
     "Sunbeam Jakarta, girls-only hackathon partnership bersama Hack Club. 2026",
 

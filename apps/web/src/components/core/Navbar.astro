@@ -2,6 +2,9 @@
 import Logo from "@/assets/logo.svg";
 import FlagEN from "@/assets/flags/en.svg";
 import FlagID from "@/assets/flags/id.svg";
+import { getLang, t } from "@nhy/i18n";
+
+const lang = getLang();
 ---
 
 <script>
@@ -84,19 +87,19 @@ import FlagID from "@/assets/flags/id.svg";
   <div class="flex gap-4 items-center text-sm font-semibold">
     <div class="flex gap-2">
       <a href="/" data-i18n="nav.about">
-        About
+        {t("nav.about", lang)}
       </a>
       /
       <a href="/" data-i18n="nav.events">
-        Events
+        {t("nav.events", lang)}
       </a>
       /
       <a href="/" data-i18n="nav.projects">
-        Projects
+        {t("nav.projects", lang)}
       </a>
       /
       <a href="/" data-i18n="nav.support">
-        Support us
+        {t("nav.support", lang)}
       </a>
     </div>
     <div class="flex gap-1">

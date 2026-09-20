@@ -2,20 +2,34 @@
 import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
 
-import Navbar from "@/components/Navbar.astro";
+import Navbar from "@/components/core/Navbar.astro";
+import { getLang } from "@nhy/i18n";
+
+const lang = getLang();
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="theme-color" content="#15111f" />
-    <meta name="generator" content={Astro.generator} />
 
     <title>Nusantara Hack Youth</title>
 
+    <script>
+      (() => {
+        const a = localStorage.getItem("@nhy/theme"),
+          b =
+            "light" === a || "dark" === a
+              ? a
+              : matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+        document.documentElement.classList.toggle("dark", "dark" === b);
+      })();
+    </script>
     <ClientRouter />
   </head>
   <body>
