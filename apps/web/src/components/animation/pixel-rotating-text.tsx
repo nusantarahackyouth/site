@@ -3,6 +3,7 @@
 import {
   memo,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -93,7 +94,10 @@ type PixelGridDimensions = {
 };
 
 type PixelCell = {
-  clipPath: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
   delay: number;
 };
 
@@ -118,13 +122,14 @@ function createPixelGrid(
     const column = pixel % columns;
     const rowFromBottom = ROWS - 1 - row;
     const columnRank = randomColumnRanks[row]?.[column] ?? column;
-    const top = row * pixelSize;
-    const right = Math.max(dimensions.width - (column + 1) * pixelSize, 0);
-    const bottom = Math.max(dimensions.height - (row + 1) * pixelSize, 0);
-    const left = column * pixelSize;
+    const x = column * pixelSize;
+    const y = row * pixelSize;
 
     return {
-      clipPath: `inset(${top}px ${right}px ${bottom}px ${left}px)`,
+      x,
+      y,
+      width: Math.min(pixelSize, dimensions.width - x),
+      height: Math.min(pixelSize, dimensions.height - y),
       delay: rowFromBottom * rowDelay + columnRank * columnDelay,
     };
   });
@@ -135,37 +140,44 @@ function createPixelGrid(
   };
 }
 
-type PixelMaskLayerProps = {
-  text: string;
+type PixelMaskProps = {
+  id: string;
   direction: "in" | "out";
+  dimensions: PixelGridDimensions;
   grid: PixelGrid;
-  alignmentClassName: string;
-  textClassName?: string;
   startDelay?: number;
 };
 
-function PixelMaskLayer({
-  text,
+function PixelMask({
+  id,
   direction,
+  dimensions,
   grid,
-  alignmentClassName,
-  textClassName,
   startDelay = 0,
-}: PixelMaskLayerProps) {
+}: PixelMaskProps) {
   const initialOpacity = direction === "out" ? 1 : 0;
   const targetOpacity = direction === "out" ? 0 : 1;
 
   return (
-    <span aria-hidden="true" className="pointer-events-none absolute inset-0">
+    <mask
+      id={id}
+      x={0}
+      y={0}
+      width={dimensions.width}
+      height={dimensions.height}
+      maskUnits="userSpaceOnUse"
+      maskContentUnits="userSpaceOnUse"
+      style={{ maskType: "alpha" }}
+    >
       {grid.cells.map((cell, pixel) => (
-        <motion.span
+        <motion.rect
           key={pixel}
-          className={cn(
-            "absolute inset-0 flex py-4 whitespace-nowrap will-change-[opacity]",
-            alignmentClassName,
-            textClassName,
-          )}
-          style={{ clipPath: cell.clipPath }}
+          x={cell.x}
+          y={cell.y}
+          width={cell.width}
+          height={cell.height}
+          fill="white"
+          shapeRendering="crispEdges"
           initial={{ opacity: initialOpacity }}
           animate={{ opacity: targetOpacity }}
           transition={{
@@ -173,11 +185,9 @@ function PixelMaskLayer({
             delay: startDelay + cell.delay,
             ease: "easeInOut",
           }}
-        >
-          {text}
-        </motion.span>
+        />
       ))}
-    </span>
+    </mask>
   );
 }
 
@@ -199,6 +209,9 @@ const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
   textClassName,
 }: PixelTransitionCanvasProps) {
   const canvasRef = useRef<HTMLSpanElement>(null);
+  const maskId = useId().replaceAll(":", "");
+  const outgoingMaskId = `${maskId}-out`;
+  const incomingMaskId = `${maskId}-in`;
   const [dimensions, setDimensions] = useState<PixelGridDimensions | null>(
     null,
   );
@@ -244,23 +257,55 @@ const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
         <span className="invisible col-start-1 row-start-1 whitespace-nowrap">
           {incomingText}
         </span>
-        {grid && (
+        {grid && dimensions && (
           <>
-            <PixelMaskLayer
-              text={outgoingText}
-              direction="out"
-              grid={grid}
-              alignmentClassName={alignmentClassName}
-              textClassName={textClassName}
-            />
-            <PixelMaskLayer
-              text={incomingText}
-              direction="in"
-              grid={grid}
-              alignmentClassName={alignmentClassName}
-              textClassName={textClassName}
-              startDelay={incomingDelay}
-            />
+            <svg
+              aria-hidden="true"
+              className="pointer-events-none absolute size-0"
+            >
+              <defs>
+                <PixelMask
+                  id={outgoingMaskId}
+                  direction="out"
+                  dimensions={dimensions}
+                  grid={grid}
+                />
+                <PixelMask
+                  id={incomingMaskId}
+                  direction="in"
+                  dimensions={dimensions}
+                  grid={grid}
+                  startDelay={incomingDelay}
+                />
+              </defs>
+            </svg>
+
+            <span
+              className={cn(
+                "pointer-events-none absolute inset-0 flex py-4 whitespace-nowrap",
+                alignmentClassName,
+                textClassName,
+              )}
+              style={{
+                mask: `url(#${outgoingMaskId})`,
+                WebkitMask: `url(#${outgoingMaskId})`,
+              }}
+            >
+              {outgoingText}
+            </span>
+            <span
+              className={cn(
+                "pointer-events-none absolute inset-0 flex py-4 whitespace-nowrap",
+                alignmentClassName,
+                textClassName,
+              )}
+              style={{
+                mask: `url(#${incomingMaskId})`,
+                WebkitMask: `url(#${incomingMaskId})`,
+              }}
+            >
+              {incomingText}
+            </span>
           </>
         )}
       </span>

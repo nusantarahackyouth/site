@@ -1,11 +1,53 @@
 ---
 import { rpc } from "@/lib/rpc";
 import Layout from "@/layouts/Layout.astro";
-import FaultyTerminal from "@/components/FaultyTerminal";
 import HeroShowcase from "@/components/features/landing/hero-showcase";
 import HeroTitle from "@/components/features/landing/hero-title";
 import { Button } from "@/components/ui/button";
 import { getLang, t } from "@nhy/i18n";
+import { getImage } from "astro:assets";
+
+import Sunbeam01 from "@/assets/photography/sunbeam-jakarta-26/photo-01.jpg";
+import Sunbeam02 from "@/assets/photography/sunbeam-jakarta-26/photo-02.jpg";
+import Sunbeam03 from "@/assets/photography/sunbeam-jakarta-26/photo-03.jpg";
+
+// Add assets to optimize, and pass to HeroShowcase
+const showcaseSources = [
+  { source: Sunbeam01, alt: "Sunbeam Jakarta gathering" },
+  { source: Sunbeam02, alt: "Sunbeam Jakarta participants" },
+  { source: Sunbeam03, alt: "Sunbeam Jakarta activities" },
+];
+const showcaseImages = await Promise.all(
+  showcaseSources.map(async ({ source, alt }) => {
+    const widths = [
+      ...new Set(
+        [640, 960, 1280].map((width) => Math.min(width, source.width)),
+      ),
+    ];
+    const variants = await Promise.all(
+      widths.map(async (width) => ({
+        width,
+        image: await getImage({
+          src: source,
+          width,
+          format: "webp",
+          quality: 90,
+        }),
+      })),
+    );
+    const largest = variants.at(-1)!;
+
+    return {
+      src: largest.image.src,
+      srcSet: variants
+        .map(({ image, width }) => `${image.src} ${width}w`)
+        .join(", "),
+      width: largest.width,
+      height: Math.round((source.height / source.width) * largest.width),
+      alt,
+    };
+  }),
+);
 
 const data = await rpc.v1.$get();
 const result = await data.json();
@@ -58,7 +100,7 @@ const lang = getLang();
       </div>
     </div>
     <div class="relative z-20 px-8 flex flex-col items-center drop-shadow-2xl">
-      <HeroShowcase client:load />
+      <HeroShowcase images={showcaseImages} client:load />
     </div>
   </section>
 </Layout>

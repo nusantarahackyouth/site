@@ -3,6 +3,7 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -26,6 +27,7 @@ export type PixelSwapPattern =
   | "spiral";
 
 export type PixelSwapTrigger = "hover" | "click";
+export type PixelSwapRenderMode = "svg" | "canvas";
 
 export type PixelSwapControls = {
   activeIndex: number;
@@ -55,6 +57,7 @@ export interface PixelSwapProps {
   aspectRatio?: string;
   className?: string;
   style?: CSSProperties;
+  renderMode?: PixelSwapRenderMode;
 }
 
 type Pixel = {
@@ -71,15 +74,29 @@ type Grid = {
   height: number;
 };
 
+type CanvasPlan = {
+  frameDuration: number;
+  frameCount: number;
+  opacities: Uint8Array;
+  scales: Uint16Array | null;
+  total: number;
+};
+
 type Transition = {
   to: number;
   grid: Grid;
+  canvasPlan: CanvasPlan | null;
+};
+
+type PreparedImage = {
+  canvas: HTMLCanvasElement;
+  key: string;
 };
 
 const MAX_PIXELS = 220;
 const KEYFRAME_STEPS = 14;
 const PIXEL_OVERLAP = 1;
-const HANDOFF_DURATION = 120;
+const CANVAS_FRAME_DURATION = 1000 / 60;
 
 const PATTERNS: Record<
   PixelSwapPattern,
@@ -94,8 +111,7 @@ const PATTERNS: Record<
   "bottom-to-top": (_x, y) => 1 - y,
   diagonal: (x, y) => (x + y) / 2,
   spiral: (x, y) => {
-    const angle =
-      (Math.atan2(y - 0.5, x - 0.5) + Math.PI) / (Math.PI * 2);
+    const angle = (Math.atan2(y - 0.5, x - 0.5) + Math.PI) / (Math.PI * 2);
     const radius = Math.hypot(x - 0.5, y - 0.5) / Math.SQRT1_2;
     return (angle + radius) % 1;
   },
@@ -123,6 +139,92 @@ const noise = (seed: number) => {
 const snapToDevicePixel = (value: number) => {
   const ratio = typeof window === "undefined" ? 1 : window.devicePixelRatio;
   return Math.round(value * ratio) / ratio;
+};
+
+const parseObjectPosition = (value: string) => {
+  const positions = value.trim().split(/\s+/);
+  const parse = (position: string | undefined, fallback: number) => {
+    if (!position) return fallback;
+    if (position === "left" || position === "top") return 0;
+    if (position === "right" || position === "bottom") return 1;
+    if (position === "center") return 0.5;
+    if (position.endsWith("%")) {
+      return clamp(Number.parseFloat(position) / 100, 0, 1);
+    }
+    return fallback;
+  };
+
+  return {
+    x: parse(positions[0], 0.5),
+    y: parse(positions[1] ?? positions[0], 0.5),
+  };
+};
+
+const getPreparedImageKey = (
+  image: HTMLImageElement,
+  width: number,
+  height: number,
+) => {
+  const styles = getComputedStyle(image);
+  return [
+    image.currentSrc || image.src,
+    width,
+    height,
+    window.devicePixelRatio,
+    styles.objectFit,
+    styles.objectPosition,
+  ].join("|");
+};
+
+const rasterizeImage = (
+  image: HTMLImageElement,
+  width: number,
+  height: number,
+) => {
+  const ratio = window.devicePixelRatio || 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(width * ratio));
+  canvas.height = Math.max(1, Math.round(height * ratio));
+
+  const context = canvas.getContext("2d");
+  if (!context) return canvas;
+
+  const styles = getComputedStyle(image);
+  const intrinsicWidth = image.naturalWidth || width;
+  const intrinsicHeight = image.naturalHeight || height;
+  let drawWidth = width;
+  let drawHeight = height;
+
+  if (styles.objectFit === "cover" || styles.objectFit === "contain") {
+    const scale =
+      styles.objectFit === "cover"
+        ? Math.max(width / intrinsicWidth, height / intrinsicHeight)
+        : Math.min(width / intrinsicWidth, height / intrinsicHeight);
+    drawWidth = intrinsicWidth * scale;
+    drawHeight = intrinsicHeight * scale;
+  } else if (styles.objectFit === "none") {
+    drawWidth = intrinsicWidth;
+    drawHeight = intrinsicHeight;
+  } else if (styles.objectFit === "scale-down") {
+    const scale = Math.min(1, width / intrinsicWidth, height / intrinsicHeight);
+    drawWidth = intrinsicWidth * scale;
+    drawHeight = intrinsicHeight * scale;
+  }
+
+  const position = parseObjectPosition(styles.objectPosition);
+  const drawX = (width - drawWidth) * position.x;
+  const drawY = (height - drawHeight) * position.y;
+
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(
+    image,
+    drawX * ratio,
+    drawY * ratio,
+    drawWidth * ratio,
+    drawHeight * ratio,
+  );
+  return canvas;
 };
 
 const makeEasing = (value: string): ((progress: number) => number) => {
@@ -213,6 +315,61 @@ const buildGrid = ({
   return { pixels, size, width, height };
 };
 
+const buildCanvasPlan = ({
+  grid,
+  duration,
+  pixelDuration,
+  pixelScale,
+  fade,
+  easing,
+}: {
+  grid: Grid;
+  duration: number;
+  pixelDuration: number;
+  pixelScale: number;
+  fade: boolean;
+  easing: string;
+}): CanvasPlan => {
+  const total = Math.max(200, duration);
+  const pixelMilliseconds = clamp(pixelDuration, 60, total);
+  const spread = Math.max(0, total - pixelMilliseconds);
+  const frameCount = Math.ceil(total / CANVAS_FRAME_DURATION) + 1;
+  const opacities = new Uint8Array(frameCount * grid.pixels.length);
+  const startScale = clamp(pixelScale, 0.05, 1);
+  const scales = startScale === 1 ? null : new Uint16Array(opacities.length);
+  const ease = makeEasing(easing);
+
+  for (let frame = 0; frame < frameCount; frame += 1) {
+    const elapsed = Math.min(frame * CANVAS_FRAME_DURATION, total);
+
+    grid.pixels.forEach((pixel, pixelIndex) => {
+      const valueIndex = frame * grid.pixels.length + pixelIndex;
+      const progress = clamp(
+        (elapsed - pixel.offset * spread) / pixelMilliseconds,
+        0,
+        1,
+      );
+      const eased = ease(progress);
+      opacities[valueIndex] = Math.round(
+        255 * (fade ? Math.min(1, eased * 1.6) : 1),
+      );
+      if (scales) {
+        scales[valueIndex] = Math.round(
+          65535 * (startScale + (1 - startScale) * eased),
+        );
+      }
+    });
+  }
+
+  return {
+    frameDuration: CANVAS_FRAME_DURATION,
+    frameCount,
+    opacities,
+    scales,
+    total,
+  };
+};
+
 const buildKeyframes = ({
   ease,
   startScale,
@@ -223,8 +380,6 @@ const buildKeyframes = ({
   fade: boolean;
 }) => {
   const windowFrames: Keyframe[] = [];
-  const contentFrames: Keyframe[] | null =
-    startScale === 1 ? null : [];
 
   for (let step = 0; step <= KEYFRAME_STEPS; step += 1) {
     const progress = step / KEYFRAME_STEPS;
@@ -234,15 +389,11 @@ const buildKeyframes = ({
     windowFrames.push({
       offset: progress,
       opacity: fade ? Math.min(1, eased * 1.6) : 1,
-      ...(contentFrames && { transform: `scale(${scale})` }),
-    });
-    contentFrames?.push({
-      offset: progress,
-      transform: `scale(${1 / scale})`,
+      transform: `scale(${scale})`,
     });
   }
 
-  return { windowFrames, contentFrames };
+  return windowFrames;
 };
 
 const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
@@ -265,6 +416,7 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
       aspectRatio = "16 / 10",
       className,
       style,
+      renderMode = "svg",
     },
     ref,
   ) {
@@ -275,13 +427,15 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
     const [transition, setTransition] = useState<Transition | null>(null);
     const [box, setBox] = useState({ width: 0, height: 0 });
 
+    const maskId = useId().replaceAll(":", "");
     const containerRef = useRef<HTMLDivElement>(null);
-    const overlayRef = useRef<HTMLDivElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const layerRefs = useRef<Array<HTMLDivElement | null>>([]);
-    const pixelRefs = useRef<Array<HTMLDivElement | null>>([]);
+    const pixelRefs = useRef<Array<SVGRectElement | null>>([]);
     const animationsRef = useRef<Animation[]>([]);
-    const handoffAnimationRef = useRef<Animation | null>(null);
+    const preparedImagesRef = useRef(new Map<number, PreparedImage>());
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const canvasFrameRef = useRef(0);
     const handoffFrameRef = useRef(0);
     const cleanupFrameRef = useRef(0);
     const contentCountRef = useRef(0);
@@ -337,6 +491,20 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
         }),
       [box.height, box.width, pattern, pixelSize, randomness],
     );
+    const canvasPlan = useMemo(
+      () =>
+        renderMode === "canvas"
+          ? buildCanvasPlan({
+              grid,
+              duration,
+              pixelDuration,
+              pixelScale,
+              fade,
+              easing,
+            })
+          : null,
+      [duration, easing, fade, grid, pixelDuration, pixelScale, renderMode],
+    );
 
     const configRef = useRef({
       duration,
@@ -347,6 +515,7 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
       onComplete,
     });
     const gridRef = useRef(grid);
+    const canvasPlanRef = useRef(canvasPlan);
     configRef.current = {
       duration,
       pixelDuration,
@@ -356,6 +525,7 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
       onComplete,
     };
     gridRef.current = grid;
+    canvasPlanRef.current = canvasPlan;
 
     useEffect(() => {
       const container = containerRef.current;
@@ -382,14 +552,13 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
     const stopAnimations = useCallback(() => {
       animationsRef.current.forEach((animation) => animation.cancel());
       animationsRef.current = [];
-      handoffAnimationRef.current?.cancel();
-      handoffAnimationRef.current = null;
-      pixelRefs.current.forEach((pixel) => pixel?.replaceChildren());
 
       if (timerRef.current !== null) clearTimeout(timerRef.current);
+      cancelAnimationFrame(canvasFrameRef.current);
       cancelAnimationFrame(handoffFrameRef.current);
       cancelAnimationFrame(cleanupFrameRef.current);
       timerRef.current = null;
+      canvasFrameRef.current = 0;
       handoffFrameRef.current = 0;
       cleanupFrameRef.current = 0;
     }, []);
@@ -397,60 +566,100 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
     useEffect(() => stopAnimations, [stopAnimations]);
 
     useEffect(() => {
-      if (
-        transition ||
-        contentCount <= 1 ||
-        desiredIndex === visibleIndex
-      ) {
+      if (renderMode !== "canvas" || !box.width || !box.height) return;
+
+      let cancelled = false;
+      const cancelScheduled: Array<() => void> = [];
+      preparedImagesRef.current.clear();
+
+      const schedule = (callback: () => void) => {
+        if ("requestIdleCallback" in window) {
+          const callbackId = window.requestIdleCallback(callback, {
+            timeout: 1000,
+          });
+          cancelScheduled.push(() => window.cancelIdleCallback(callbackId));
+          return;
+        }
+
+        const timeoutId = setTimeout(callback, 0);
+        cancelScheduled.push(() => clearTimeout(timeoutId));
+      };
+
+      const removeLoadListeners: Array<() => void> = [];
+
+      layerRefs.current
+        .slice(0, contentCount)
+        .forEach((layer, contentIndex) => {
+          const image = layer?.querySelector("img");
+          if (!image) return;
+
+          const rasterize = () => {
+            const prepare = () => {
+              schedule(() => {
+                if (cancelled || !image.complete || !image.naturalWidth) {
+                  return;
+                }
+
+                preparedImagesRef.current.set(contentIndex, {
+                  canvas: rasterizeImage(image, box.width, box.height),
+                  key: getPreparedImageKey(image, box.width, box.height),
+                });
+              });
+            };
+
+            image.decode().then(prepare, prepare);
+          };
+
+          if (image.complete && image.naturalWidth) {
+            rasterize();
+            return;
+          }
+
+          image.addEventListener("load", rasterize, { once: true });
+          removeLoadListeners.push(() =>
+            image.removeEventListener("load", rasterize),
+          );
+        });
+
+      return () => {
+        cancelled = true;
+        cancelScheduled.forEach((cancel) => cancel());
+        removeLoadListeners.forEach((remove) => remove());
+        preparedImagesRef.current.clear();
+      };
+    }, [box.height, box.width, contentCount, renderMode]);
+
+    useEffect(() => {
+      if (transition || contentCount <= 1 || desiredIndex === visibleIndex) {
         return;
       }
 
-      setTransition({ to: desiredIndex, grid: gridRef.current });
+      setTransition({
+        to: desiredIndex,
+        grid: gridRef.current,
+        canvasPlan: canvasPlanRef.current,
+      });
     }, [contentCount, desiredIndex, transition, visibleIndex]);
 
     useEffect(() => {
       if (!transition) return;
 
       const settings = configRef.current;
-      const { grid: frozenGrid, to } = transition;
+      const { canvasPlan: frozenCanvasPlan, grid: frozenGrid, to } = transition;
 
       const finish = () => {
         setShownIndex(to);
 
         handoffFrameRef.current = requestAnimationFrame(() => {
           cleanupFrameRef.current = requestAnimationFrame(() => {
-            const overlay = overlayRef.current;
-            if (!overlay) {
-              stopAnimations();
-              setTransition(null);
-              settings.onComplete?.(to);
-              return;
-            }
-
-            const handoffAnimation = overlay.animate(
-              [{ opacity: 1 }, { opacity: 0 }],
-              {
-                duration: HANDOFF_DURATION,
-                easing: "ease-out",
-                fill: "forwards",
-              },
-            );
-            handoffAnimationRef.current = handoffAnimation;
-            handoffAnimation.onfinish = () => {
-              if (handoffAnimationRef.current !== handoffAnimation) return;
-
-              handoffAnimationRef.current = null;
-              stopAnimations();
-              setTransition(null);
-              settings.onComplete?.(to);
-            };
+            stopAnimations();
+            setTransition(null);
+            settings.onComplete?.(to);
           });
         });
       };
 
-      const source = layerRefs.current[to];
       if (
-        !source ||
         frozenGrid.pixels.length === 0 ||
         matchMedia("(prefers-reduced-motion: reduce)").matches
       ) {
@@ -458,10 +667,125 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
         return;
       }
 
+      if (renderMode === "canvas") {
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext("2d");
+        const image = layerRefs.current[to]?.querySelector("img");
+
+        if (!canvas || !context || !image || !frozenCanvasPlan) {
+          finish();
+          return;
+        }
+
+        let cancelled = false;
+
+        const run = async () => {
+          try {
+            await image.decode();
+          } catch {
+            // A loaded image can remain drawable when decode() rejects.
+          }
+
+          if (cancelled || !image.complete || !image.naturalWidth) {
+            if (!cancelled) finish();
+            return;
+          }
+
+          const preparedKey = getPreparedImageKey(
+            image,
+            frozenGrid.width,
+            frozenGrid.height,
+          );
+          const prepared = preparedImagesRef.current.get(to);
+          const imageCanvas =
+            prepared?.key === preparedKey
+              ? prepared.canvas
+              : rasterizeImage(image, frozenGrid.width, frozenGrid.height);
+          const physicalWidth = imageCanvas.width;
+          const physicalHeight = imageCanvas.height;
+          const ratio = physicalWidth / frozenGrid.width;
+          const maskCanvas = document.createElement("canvas");
+          maskCanvas.width = physicalWidth;
+          maskCanvas.height = physicalHeight;
+          canvas.width = physicalWidth;
+          canvas.height = physicalHeight;
+
+          const maskContext = maskCanvas.getContext("2d");
+          if (!maskContext) {
+            finish();
+            return;
+          }
+
+          const pixelCount = frozenGrid.pixels.length;
+          const pixelWindowSize = frozenGrid.size + PIXEL_OVERLAP;
+          let startedAt: number | null = null;
+
+          const draw = (timestamp: number) => {
+            if (cancelled) return;
+            startedAt ??= timestamp;
+
+            const elapsed = Math.min(
+              timestamp - startedAt,
+              frozenCanvasPlan.total,
+            );
+            const frame = Math.min(
+              frozenCanvasPlan.frameCount - 1,
+              Math.floor(elapsed / frozenCanvasPlan.frameDuration),
+            );
+            const frameOffset = frame * pixelCount;
+
+            maskContext.clearRect(0, 0, physicalWidth, physicalHeight);
+            maskContext.fillStyle = "white";
+
+            frozenGrid.pixels.forEach((pixel, pixelIndex) => {
+              const valueIndex = frameOffset + pixelIndex;
+              const opacity = frozenCanvasPlan.opacities[valueIndex] ?? 0;
+              if (opacity === 0) return;
+
+              const scale = frozenCanvasPlan.scales
+                ? (frozenCanvasPlan.scales[valueIndex] ?? 0) / 65535
+                : 1;
+              const size = pixelWindowSize * scale;
+              const inset = (pixelWindowSize - size) / 2;
+              maskContext.globalAlpha = opacity / 255;
+              maskContext.fillRect(
+                (pixel.left + inset) * ratio,
+                (pixel.top + inset) * ratio,
+                size * ratio,
+                size * ratio,
+              );
+            });
+
+            maskContext.globalAlpha = 1;
+            context.clearRect(0, 0, physicalWidth, physicalHeight);
+            context.globalCompositeOperation = "source-over";
+            context.drawImage(imageCanvas, 0, 0);
+            context.globalCompositeOperation = "destination-in";
+            context.drawImage(maskCanvas, 0, 0);
+            context.globalCompositeOperation = "source-over";
+
+            if (elapsed >= frozenCanvasPlan.total) {
+              finish();
+              return;
+            }
+
+            canvasFrameRef.current = requestAnimationFrame(draw);
+          };
+
+          canvasFrameRef.current = requestAnimationFrame(draw);
+        };
+
+        void run();
+        return () => {
+          cancelled = true;
+          stopAnimations();
+        };
+      }
+
       const total = Math.max(200, settings.duration);
       const pixelMilliseconds = clamp(settings.pixelDuration, 60, total);
       const spread = Math.max(0, total - pixelMilliseconds);
-      const { windowFrames, contentFrames } = buildKeyframes({
+      const windowFrames = buildKeyframes({
         ease: makeEasing(settings.easing),
         startScale: clamp(settings.pixelScale, 0.05, 1),
         fade: settings.fade,
@@ -471,24 +795,6 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
         const pixelElement = pixelRefs.current[pixelIndex];
         if (!pixelElement) return;
 
-        const content = document.createElement("div");
-        content.className = "absolute";
-        content.style.left = `${-pixel.left}px`;
-        content.style.top = `${-pixel.top}px`;
-        content.style.width = `${frozenGrid.width}px`;
-        content.style.height = `${frozenGrid.height}px`;
-
-        const pixelWindowSize = frozenGrid.size + PIXEL_OVERLAP;
-        const originX = pixel.left + pixelWindowSize / 2;
-        const originY = pixel.top + pixelWindowSize / 2;
-        content.style.transformOrigin = `${originX}px ${originY}px`;
-
-        const clone = source.cloneNode(true) as HTMLElement;
-        clone.dataset.visible = "true";
-        clone.removeAttribute("aria-hidden");
-        content.appendChild(clone);
-        pixelElement.replaceChildren(content);
-
         const timing: KeyframeAnimationOptions = {
           duration: pixelMilliseconds,
           delay: pixel.offset * spread,
@@ -496,14 +802,11 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
           fill: "both",
         };
         animationsRef.current.push(pixelElement.animate(windowFrames, timing));
-        if (contentFrames) {
-          animationsRef.current.push(content.animate(contentFrames, timing));
-        }
       });
 
       timerRef.current = setTimeout(finish, total);
       return stopAnimations;
-    }, [stopAnimations, transition]);
+    }, [renderMode, stopAnimations, transition]);
 
     const interactionProps = useMemo(() => {
       if (trigger === "hover") {
@@ -555,6 +858,8 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
       >
         {contents.map((content, contentIndex) => {
           const isShown = contentIndex === visibleIndex;
+          const isTransitionTarget =
+            renderMode === "svg" && transition?.to === contentIndex && !isShown;
 
           return (
             <div
@@ -563,8 +868,14 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
                 layerRefs.current[contentIndex] = element;
               }}
               className="absolute inset-0 h-full w-full data-[visible=false]:invisible"
-              data-visible={isShown}
-              style={{ zIndex: isShown ? 2 : 1 }}
+              data-visible={isShown || isTransitionTarget}
+              style={{
+                zIndex: isTransitionTarget ? 3 : isShown ? 2 : 1,
+                ...(isTransitionTarget && {
+                  mask: `url(#${maskId})`,
+                  WebkitMask: `url(#${maskId})`,
+                }),
+              }}
               aria-hidden={!isShown}
             >
               {content}
@@ -572,28 +883,52 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
           );
         })}
 
-        {transition && (
-          <div
-            ref={overlayRef}
-            className="pointer-events-none absolute inset-0 z-3"
+        {transition && renderMode === "svg" && (
+          <svg
             aria-hidden="true"
+            className="pointer-events-none absolute size-0"
           >
-            {transition.grid.pixels.map((pixel, pixelIndex) => (
-              <div
-                key={pixel.id}
-                ref={(element) => {
-                  pixelRefs.current[pixelIndex] = element;
-                }}
-                className="absolute overflow-hidden opacity-0 contain-[paint]"
-                style={{
-                  left: pixel.left,
-                  top: pixel.top,
-                  width: transition.grid.size + PIXEL_OVERLAP,
-                  height: transition.grid.size + PIXEL_OVERLAP,
-                }}
-              />
-            ))}
-          </div>
+            <defs>
+              <mask
+                id={maskId}
+                x={0}
+                y={0}
+                width={transition.grid.width}
+                height={transition.grid.height}
+                maskUnits="userSpaceOnUse"
+                maskContentUnits="userSpaceOnUse"
+                style={{ maskType: "alpha" }}
+              >
+                {transition.grid.pixels.map((pixel, pixelIndex) => (
+                  <rect
+                    key={pixel.id}
+                    ref={(element) => {
+                      pixelRefs.current[pixelIndex] = element;
+                    }}
+                    x={pixel.left}
+                    y={pixel.top}
+                    width={transition.grid.size + PIXEL_OVERLAP}
+                    height={transition.grid.size + PIXEL_OVERLAP}
+                    fill="white"
+                    shapeRendering="crispEdges"
+                    style={{
+                      opacity: 0,
+                      transformBox: "fill-box",
+                      transformOrigin: "center",
+                    }}
+                  />
+                ))}
+              </mask>
+            </defs>
+          </svg>
+        )}
+
+        {transition && renderMode === "canvas" && (
+          <canvas
+            ref={canvasRef}
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-3 h-full w-full"
+          />
         )}
       </div>
     );
