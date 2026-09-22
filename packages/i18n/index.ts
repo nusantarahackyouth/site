@@ -74,6 +74,10 @@ function localeFromLanguages(value: string | null): Locale | undefined {
   return undefined;
 }
 
+function localeFromCountry(value: string | null): Locale | undefined {
+  return value?.trim().toLowerCase() === "id" ? "id" : undefined;
+}
+
 function isRequest(
   source: LocaleRequest | LocaleHeaders,
 ): source is LocaleRequest {
@@ -99,6 +103,7 @@ export function getLang(source?: LocaleSource): Locale {
     return (
       localeFromCookie(headers.get("cookie")) ??
       localeFromLanguages(headers.get("accept-language")) ??
+      localeFromCountry(headers.get("cf-ipcountry")) ??
       defaultLocale
     );
   }
