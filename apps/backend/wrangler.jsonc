@@ -8,6 +8,10 @@
   "keep_vars": true,
   "routes": [
     {
+      "pattern": "hackyouth.id/api",
+      "zone_name": "hackyouth.id",
+    },
+    {
       "pattern": "hackyouth.id/api/*",
       "zone_name": "hackyouth.id",
     },
