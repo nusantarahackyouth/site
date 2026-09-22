@@ -1,17 +1,28 @@
+
 "use client";
 
 import { useSyncExternalStore } from "react";
 
-import { defaultLocale, getLang, subscribeLocale, t } from "@nhy/i18n";
+import {
+  defaultLocale,
+  getLang,
+  subscribeLocale,
+  t,
+  type Locale,
+} from "@nhy/i18n";
 import { LocalizedRotatingPixelText } from "@/components/animation/pixel-rotating-text";
 
-const getServerLocale = () => defaultLocale;
+type HeroTitleProps = {
+  initialLocale?: Locale;
+};
 
-export default function HeroTitle() {
+export default function HeroTitle({
+  initialLocale = defaultLocale,
+}: HeroTitleProps) {
   const locale = useSyncExternalStore(
     subscribeLocale,
     getLang,
-    getServerLocale,
+    () => initialLocale,
   );
 
   return (
@@ -20,6 +31,7 @@ export default function HeroTitle() {
         <span className="w-full lg:w-[unset]">{t("hero.tagline.1", locale)}</span>
         <LocalizedRotatingPixelText
           translationKey="hero.rotating"
+          initialLocale={initialLocale}
           duration={4}
           animationDuration={1}
           widthTransition={[0.77, 0, 0.18, 1]}

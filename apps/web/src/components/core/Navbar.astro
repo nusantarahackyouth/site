@@ -4,7 +4,7 @@ import FlagEN from "@/assets/flags/en.svg";
 import FlagID from "@/assets/flags/id.svg";
 import { getLang, t } from "@nhy/i18n";
 
-const lang = getLang();
+const lang = getLang(Astro.request);
 ---
 
 <script>
@@ -138,7 +138,7 @@ const lang = getLang();
         oncontextmenu="return false;"
       />
       <span class="font-jakarta-sans leading-4 font-semibold select-none">
-        <p class="text-primary">Nusantara</p>
+        <p class="text-primary dark:text-[#f04051]">Nusantara</p>
         <p class="font-bold">Hack Youth</p>
       </span>
     </div>

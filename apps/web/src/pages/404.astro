@@ -2,7 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import { getLang, t } from "@nhy/i18n";
 
-const lang = getLang();
+const lang = getLang(Astro.request);
 ---
 
 <Layout>

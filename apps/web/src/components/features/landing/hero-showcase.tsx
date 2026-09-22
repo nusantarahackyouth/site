@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -80,10 +81,12 @@ export default function HeroShowcase({
         isAnimated ? "h-full" : "h-72 md:h-96 md:w-160",
         imageClassName,
       )}
+
       loading={index === 0 ? "eager" : "lazy"}
       fetchPriority={index === 0 ? "high" : "auto"}
       decoding="async"
       onLoad={isAnimated ? () => markImageReady(index) : undefined}
+
       ref={
         isAnimated
           ? (element) => {

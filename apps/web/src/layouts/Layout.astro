@@ -5,7 +5,7 @@ import "../styles/global.css";
 import Navbar from "@/components/core/Navbar.astro";
 import { getLang } from "@nhy/i18n";
 
-const lang = getLang();
+const lang = getLang(Astro.request);
 ---
 
 <!doctype html>

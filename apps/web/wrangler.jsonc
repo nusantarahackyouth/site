@@ -1,11 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nhy-site-fe",
+  "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-09-15",
+  "compatibility_flags": ["global_fetch_strictly_public"],
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page",
+    "binding": "ASSETS",
   },
+  "services": [
+    {
+      "binding": "API",
+      "service": "nhy-site-be",
+    },
+  ],
   "keep_vars": true,
   "routes": [
     {

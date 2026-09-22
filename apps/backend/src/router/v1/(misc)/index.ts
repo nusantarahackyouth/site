@@ -1,7 +1,9 @@
 // import * as z from "zod";
 // import { zValidator } from "@hono/zod-validator";
-import { HonoBase } from "../../app";
+import { createHono } from "@/router/app";
 
-export const router = new HonoBase().get("/", (c) => {
+const router = createHono().get("/", (c) => {
   return c.json({ ok: true });
 });
+
+export default router;

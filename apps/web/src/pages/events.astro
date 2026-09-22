@@ -1,5 +1,6 @@
 ---
-import { rpc } from "@/lib/rpc";
+import ServerAPI from "@/lib/requests/server";
+
 import Layout from "@/layouts/Layout.astro";
 import { getLang, t } from "@nhy/i18n";
 
@@ -8,8 +9,9 @@ import Sunbeam02 from "@/assets/photography/sunbeam-jakarta-26/photo-02.jpg";
 import Sunbeam03 from "@/assets/photography/sunbeam-jakarta-26/photo-03.jpg";
 import { Image } from "astro:assets";
 
-const data = await rpc.v1.$get();
-const lang = getLang();
+const result = await ServerAPI.getV1Test();
+const events = await ServerAPI.getEvents();
+const lang = getLang(Astro.request);
 ---
 
 <Layout>

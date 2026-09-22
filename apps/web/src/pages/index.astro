@@ -1,5 +1,6 @@
 ---
-import { rpc } from "@/lib/rpc";
+import ServerAPI from "@/lib/requests/server";
+
 import Layout from "@/layouts/Layout.astro";
 import HeroRound from "@/components/features/landing/HeroRound.astro";
 import HeroShowcase from "@/components/features/landing/hero-showcase";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getLang, t } from "@nhy/i18n";
 import { getImage } from "astro:assets";
 
+import Logo from "@/assets/logo.svg";
 import Sunbeam01 from "@/assets/photography/sunbeam-jakarta-26/photo-01.jpg";
 import Sunbeam02 from "@/assets/photography/sunbeam-jakarta-26/photo-02.jpg";
 import Sunbeam03 from "@/assets/photography/sunbeam-jakarta-26/photo-03.jpg";
@@ -22,9 +24,18 @@ type ShowcaseSource = {
 };
 
 const sunbeamSources: ShowcaseSource[] = [
-  { source: Sunbeam01, alt: "Sunbeam Jakarta gathering" },
-  { source: Sunbeam02, alt: "Sunbeam Jakarta participants" },
-  { source: Sunbeam03, alt: "Sunbeam Jakarta activities" },
+  {
+    source: Sunbeam01,
+    alt: "Sunbeam Jakarta participants collaborating around a table of laptops",
+  },
+  {
+    source: Sunbeam02,
+    alt: "Three Sunbeam Jakarta participants working together on laptops",
+  },
+  {
+    source: Sunbeam03,
+    alt: "Two Sunbeam Jakarta participants taking a selfie",
+  },
 ];
 
 const daydreamSources: ShowcaseSource[] = [
@@ -88,9 +99,9 @@ const [sunbeamImages, daydreamImages, campfireImages] = await Promise.all([
   optimizeShowcaseImages(campfireSources),
 ]);
 
-const data = await rpc.v1.$get();
-const result = await data.json();
-const lang = getLang();
+const result = await ServerAPI.getV1Test();
+const events = await ServerAPI.getEvents();
+const lang = getLang(Astro.request);
 ---
 
 <Layout>
@@ -100,7 +111,7 @@ const lang = getLang();
       <div class="absolute -bottom-8 left-[50%] translate-x-[-50%] bg-red-600/40 h-96 rounded-t-full w-[80vw] blur-[6rem]" />
     </div>
     <div class="pointer-events-none absolute inset-0 z-10 overflow-hidden">
-      <div class="hidden lg:block pointer-events-auto absolute bottom-[-12vh] left-10 scale-[clamp(0.7,calc(100vw/1800px),0.9)] translate-y-0 transition-[bottom] duration-200 hover:bottom-[-4vh]">
+      <div class="pointer-events-auto absolute -bottom-12 -left-28 origin-bottom-left scale-50 transition-[bottom] duration-200 sm:-bottom-24 sm:-left-20 sm:scale-[0.6] lg:bottom-[-12vh] lg:left-10 lg:origin-center lg:scale-[0.7] lg:hover:bottom-[-4vh] xl:scale-[0.8] 2xl:scale-[0.9]">
         <HeroShowcase
           src={daydreamImages[0]}
           className="group rotate-2"
@@ -114,7 +125,7 @@ const lang = getLang();
           </p>
         </HeroShowcase>
       </div>
-      <div class="hidden lg:block pointer-events-auto absolute bottom-[-12vh] right-10 scale-[clamp(0.7,calc(100vw/1800px),0.9)] translate-y-0 transition-[bottom] duration-200 hover:bottom-[-4vh]">
+      <div class="pointer-events-auto absolute -right-12 -bottom-12 origin-bottom-right scale-50 transition-[bottom] duration-200 sm:-right-20 sm:-bottom-24 sm:scale-[0.6] lg:right-10 lg:bottom-[-12vh] lg:origin-center lg:scale-[0.7] lg:hover:bottom-[-4vh] xl:scale-[0.8] 2xl:scale-[0.9]">
         <HeroShowcase
           src={campfireImages[0]}
           className="group -rotate-2"
@@ -130,7 +141,7 @@ const lang = getLang();
       </div>
     </div>
     <div class="relative z-20 flex flex-col items-center justify-center inner gap-6 py-48 pb-40">
-      <HeroTitle client:load />
+      <HeroTitle initialLocale={lang} client:load />
       <p
         class="text-lg sm:text-xl max-w-2xl text-center text-muted-foreground"
         data-i18n="hero.description"
@@ -138,19 +149,27 @@ const lang = getLang();
         {t("hero.description", lang)}
       </p>
       <div class="flex gap-2 items-center pointer-events-auto">
-        <Button
-          className="rounded-full p-5 text-lg shimmer-hover hover:bg-primary cursor-pointer"
-          size="lg"
-        >
-          Something
-        </Button>
-        <Button
-          className="rounded-full p-5 text-lg"
-          size="lg"
-          variant="outline"
-        >
-          Something
-        </Button>
+        <a href="/support-us" class="contents">
+          <Button
+            className="rounded-full p-5 text-lg shimmer-hover hover:bg-primary cursor-pointer"
+            size="lg"
+          >
+            <span data-i18n="home.cta.support">
+              {t("home.cta.support", lang)}
+            </span>
+          </Button>
+        </a>
+        <a href="/events" class="contents">
+          <Button
+            className="rounded-full p-5 text-lg"
+            size="lg"
+            variant="outline"
+          >
+            <span data-i18n="home.cta.events">
+              {t("home.cta.events", lang)}
+            </span>
+          </Button>
+        </a>
       </div>
     </div>
     <div class="pointer-events-none relative z-20 flex flex-col items-center px-8 drop-shadow-2xl">
@@ -168,9 +187,192 @@ const lang = getLang();
       </HeroShowcase>
     </div>
   </section>
-  <div class="w-full h-64"></div>
-  <div class="w-full h-32 px-8">
-      <h1>So, whats our mission?</h1>
-      <p>Content coming soon.</p>
-  </div>
+  <div class="h-48 w-full sm:h-64"></div>
+
+  <section class="inner px-6 py-16 sm:py-24">
+    <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+      <div>
+        <p
+          class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary"
+          data-i18n="home.mission.label"
+        >
+          {t("home.mission.label", lang)}
+        </p>
+        <h2 class="max-w-xl font-serif text-4xl font-medium leading-tight sm:text-5xl lg:text-6xl">
+          <span data-i18n="home.mission.title.1">
+            {t("home.mission.title.1", lang)}
+          </span>{" "}
+          <span class="text-primary" data-i18n="home.mission.title.highlight.1">
+            {t("home.mission.title.highlight.1", lang)}
+          </span>{" "}
+          <span data-i18n="home.mission.title.2">
+            {t("home.mission.title.2", lang)}
+          </span>{" "}
+          <span class="text-primary" data-i18n="home.mission.title.highlight.2">
+            {t("home.mission.title.highlight.2", lang)}
+          </span>
+          .
+        </h2>
+      </div>
+      <div class="flex max-w-2xl flex-col justify-center gap-5 text-lg leading-relaxed text-muted-foreground sm:text-xl">
+        <p data-i18n="home.mission.description.1">
+          {t("home.mission.description.1", lang)}
+        </p>
+        <p data-i18n="home.mission.description.2">
+          {t("home.mission.description.2", lang)}
+        </p>
+        <a
+          href="/about"
+          class="w-fit font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-8 transition-colors hover:text-primary"
+          data-i18n="home.mission.link"
+        >
+          {t("home.mission.link", lang)}
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-y border-border bg-muted/35">
+    <div class="inner px-6 py-16 sm:py-20">
+      <p
+        class="mb-8 text-sm font-semibold uppercase tracking-[0.2em] text-primary"
+        data-i18n="home.impact.label"
+      >
+        {t("home.impact.label", lang)}
+      </p>
+      <div class="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
+        <div class="bg-background p-8 sm:p-10">
+          <p class="font-serif text-5xl font-medium sm:text-6xl">
+            {events?.data?.length ?? "3+"}
+          </p>
+          <p class="mt-3 text-muted-foreground" data-i18n="home.impact.events">
+            {t("home.impact.events", lang)}
+          </p>
+        </div>
+        <div class="bg-background p-8 sm:p-10">
+          <p class="font-serif text-5xl font-medium sm:text-6xl">150+</p>
+          <p class="mt-3 text-muted-foreground" data-i18n="home.impact.people">
+            {t("home.impact.people", lang)}
+          </p>
+        </div>
+        <div class="bg-background p-8 sm:p-10">
+          <p
+            class="font-serif text-5xl font-medium sm:text-6xl"
+            data-i18n="home.impact.lots"
+          >
+            {t("home.impact.lots", lang)}
+          </p>
+          <p class="mt-3 text-muted-foreground" data-i18n="home.impact.ideas">
+            {t("home.impact.ideas", lang)}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="inner px-6 py-16 sm:py-24">
+    <div class="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div>
+        <p
+          class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary"
+          data-i18n="home.events.label"
+        >
+          {t("home.events.label", lang)}
+        </p>
+        <h2
+          class="font-serif text-4xl font-medium sm:text-5xl"
+          data-i18n="home.events.title"
+        >
+          {t("home.events.title", lang)}
+        </h2>
+      </div>
+      <a
+        href="/events"
+        class="w-fit font-semibold underline decoration-primary decoration-2 underline-offset-8 transition-colors hover:text-primary"
+        data-i18n="home.events.link"
+      >
+        {t("home.events.link", lang)}
+      </a>
+    </div>
+    <div class="grid gap-4 md:grid-cols-3">
+      <article class="rounded-2xl border border-border p-6 sm:p-8">
+        <p
+          class="mb-2 text-sm font-semibold text-primary"
+          data-i18n="home.events.sunbeam.category"
+        >
+          {t("home.events.sunbeam.category", lang)}
+        </p>
+        <h3 class="font-serif text-3xl font-medium">Sunbeam Jakarta</h3>
+        <p
+          class="mt-4 leading-relaxed text-muted-foreground"
+          data-i18n="home.events.sunbeam.description"
+        >
+          {t("home.events.sunbeam.description", lang)}
+        </p>
+      </article>
+      <article class="rounded-2xl border border-border p-6 sm:p-8">
+        <p
+          class="mb-2 text-sm font-semibold text-primary"
+          data-i18n="home.events.daydream.category"
+        >
+          {t("home.events.daydream.category", lang)}
+        </p>
+        <h3 class="font-serif text-3xl font-medium">Daydream Jakarta</h3>
+        <p
+          class="mt-4 leading-relaxed text-muted-foreground"
+          data-i18n="home.events.daydream.description"
+        >
+          {t("home.events.daydream.description", lang)}
+        </p>
+      </article>
+      <article class="rounded-2xl border border-border p-6 sm:p-8">
+        <p
+          class="mb-2 text-sm font-semibold text-primary"
+          data-i18n="home.events.campfire.category"
+        >
+          {t("home.events.campfire.category", lang)}
+        </p>
+        <h3 class="font-serif text-3xl font-medium">Campfire Jakarta</h3>
+        <p
+          class="mt-4 leading-relaxed text-muted-foreground"
+          data-i18n="home.events.campfire.description"
+        >
+          {t("home.events.campfire.description", lang)}
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="inner px-6 pb-16 sm:pb-24">
+    <div class="relative flex flex-col gap-8 rounded-3xl bg-foreground p-8 text-background sm:p-12 lg:flex-row lg:items-center lg:justify-between">
+      <Logo class="absolute dark:invert opacity-10 w-96 h-96 -bottom-28 -right-12 select-none pointer-events-none" />
+      <div class="max-w-2xl">
+        <p
+          class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] opacity-70"
+          data-i18n="home.support.label"
+        >
+          {t("home.support.label", lang)}
+        </p>
+        <h2
+          class="font-serif text-4xl font-medium sm:text-5xl"
+          data-i18n="home.support.title"
+        >
+          {t("home.support.title", lang)}
+        </h2>
+        <p
+          class="mt-4 text-lg leading-relaxed opacity-75"
+          data-i18n="home.support.description"
+        >
+          {t("home.support.description", lang)}
+        </p>
+      </div>
+      <a
+        href="/support-us"
+        class="w-fit shrink-0 rounded-full bg-background px-6 py-3 font-semibold text-foreground transition-[scale,background,color] hover:scale-105 hover:bg-primary hover:text-primary-foreground"
+        data-i18n="home.support.link"
+      >
+        {t("home.support.link", lang)}
+      </a>
+    </div>
+  </section>
 </Layout>
