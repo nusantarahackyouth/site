@@ -21,7 +21,7 @@ export const app = api
         info: {
           title: "Nusantara Hack Youth API",
           version: "1.0.0",
-          description: "API for Nusantara Hack Youth services.",
+          description: "Public API for Nusantara Hack Youth services.",
         },
         servers: [{ url: c.env?.SERVER_API_URL ?? "/api" }],
       },
