@@ -111,10 +111,7 @@ const lang = getLang(Astro.request);
       <div class="absolute -bottom-8 left-[50%] translate-x-[-50%] bg-red-600/40 h-96 rounded-t-full w-[80vw] blur-[6rem]" />
     </div>
     <div class="pointer-events-none absolute inset-0 z-10 overflow-hidden">
-      <div
-        class="pointer-events-auto absolute -bottom-12 -left-28 origin-bottom-left scale-50 transition-[bottom] duration-200 sm:-bottom-24 sm:-left-20 sm:scale-[0.6] lg:bottom-[-12vh] lg:left-10 lg:origin-center lg:scale-[0.7] lg:hover:bottom-[-4vh] xl:scale-[0.8] 2xl:scale-[0.9]"
-        id="zoom-daydream"
-      >
+      <div class="pointer-events-auto absolute -bottom-12 -left-28 origin-bottom-left scale-50 transition-[bottom] duration-200 sm:-bottom-24 sm:-left-20 sm:scale-[0.6] lg:bottom-[-12vh] lg:left-10 lg:origin-center lg:scale-[0.7] lg:hover:bottom-[-4vh] xl:scale-[0.8] 2xl:scale-[0.9]">
         <HeroShowcase
           src={daydreamImages[0]}
           className="group rotate-2"
@@ -128,10 +125,7 @@ const lang = getLang(Astro.request);
           </p>
         </HeroShowcase>
       </div>
-      <div
-        class="pointer-events-auto absolute -right-12 -bottom-12 origin-bottom-right scale-50 transition-[bottom] duration-200 sm:-right-20 sm:-bottom-24 sm:scale-[0.6] lg:right-10 lg:bottom-[-12vh] lg:origin-center lg:scale-[0.7] lg:hover:bottom-[-4vh] xl:scale-[0.8] 2xl:scale-[0.9]"
-        id="zoom-campfire"
-      >
+      <div class="pointer-events-auto absolute -right-12 -bottom-12 origin-bottom-right scale-50 transition-[bottom] duration-200 sm:-right-20 sm:-bottom-24 sm:scale-[0.6] lg:right-10 lg:bottom-[-12vh] lg:origin-center lg:scale-[0.7] lg:hover:bottom-[-4vh] xl:scale-[0.8] 2xl:scale-[0.9]">
         <HeroShowcase
           src={campfireImages[0]}
           className="group -rotate-2"
@@ -178,10 +172,7 @@ const lang = getLang(Astro.request);
         </a>
       </div>
     </div>
-    <div
-      class="pointer-events-none relative z-20 flex flex-col items-center px-8 drop-shadow-2xl"
-      id="zoom-sunbeam"
-    >
+    <div class="pointer-events-none relative z-20 flex flex-col items-center px-8 drop-shadow-2xl">
       <HeroShowcase
         src={sunbeamImages}
         className="pointer-events-auto -rotate-1 drop-shadow-xl transition-[scale] hover:scale-105"
@@ -384,57 +375,4 @@ const lang = getLang(Astro.request);
       </a>
     </div>
   </section>
-  <script is:inline>
-    function getZoom() {
-      if (window.visualViewport) {
-        var s = window.visualViewport.scale;
-        if (s && s !== 1) return s;
-      }
-      return screen.width / document.documentElement.clientWidth;
-    }
-    function fixZoom() {
-      var zoom = getZoom();
-      var ids = ["zoom-daydream", "zoom-campfire", "zoom-sunbeam"];
-      for (var i = 0; i < ids.length; i++) {
-        var el = document.getElementById(ids[i]);
-        if (!el) continue;
-        el.style.transform = "";
-        var m = getComputedStyle(el).transform;
-        var inv = 1.25 / zoom;
-        if (!m || m === "none") {
-          el.style.transform = "scale(" + inv + ")";
-        } else {
-          var parts = m.slice(7, -1).split(",").map(Number);
-          var a = parts[0],
-            b = parts[1];
-          var curScale = Math.sqrt(a * a + b * b);
-          el.style.transform = "scale(" + curScale * inv + ")";
-        }
-      }
-    }
-    var lastZoom = 0;
-    setInterval(function () {
-      var zoom = getZoom();
-      if (Math.abs(zoom - lastZoom) > 0.01) {
-        lastZoom = zoom;
-        console.log("[zoom] scale=" + zoom + " inv=" + 1 / zoom);
-        fixZoom();
-        var els = ["zoom-daydream", "zoom-campfire", "zoom-sunbeam"].map(
-          function (id) {
-            return document.getElementById(id);
-          },
-        );
-        console.log(
-          "[zoom] transforms:",
-          els.map(function (e) {
-            return e ? e.style.transform : null;
-          }),
-        );
-      }
-    }, 200);
-    if (window.visualViewport)
-      window.visualViewport.addEventListener("resize", fixZoom);
-    window.addEventListener("resize", fixZoom);
-    fixZoom();
-  </script>
 </Layout>
