@@ -7,7 +7,7 @@ export default {
   "hero.tagline.2": "membangun generasi bangsa.",
   "hero.rotating": ["berkarya", "berkreasi", "berinovasi"],
   "hero.description":
-    "Kami mendukung dan menyelenggarakan hackathon untuk para remaja, dan memberikan ruang untuk belajar dan berkarya bersama.",
+    "Kami mendukung dan menyelenggarakan hackathon untuk generasi muda, dan memberikan ruang untuk belajar dan berkarya bersama.",
   "hero.cover.sunbeam.description":
     "Sunbeam Jakarta, girls-only hackathon partnership bersama Hack Club. 2026",
   "hero.cover.daydream.description":
