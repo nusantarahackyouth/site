@@ -872,10 +872,12 @@ const PixelSwap = forwardRef<PixelSwapHandle, PixelSwapProps>(
               data-visible={isShown || isTransitionTarget}
               style={{
                 zIndex: isTransitionTarget ? 3 : isShown ? 2 : 1,
-                ...(isTransitionTarget && {
-                  mask: `url(#${maskId})`,
-                  WebkitMask: `url(#${maskId})`,
-                }),
+               ...(isTransitionTarget && {
+                   maskImage: `url(#${maskId})`,
+                   WebkitMaskImage: `url(#${maskId})`,
+                   WebkitBackfaceVisibility: "hidden",
+                   backfaceVisibility: "hidden",
+                 }),
               }}
               aria-hidden={!isShown}
             >

@@ -168,26 +168,25 @@ function PixelMask({
       height={dimensions.height}
       maskUnits="userSpaceOnUse"
       maskContentUnits="userSpaceOnUse"
-      style={{ maskType: "alpha" }}
-    >
-      {grid.cells.map((cell, pixel) => (
-        <motion.rect
-          key={pixel}
-          x={cell.x}
-          y={cell.y}
-          width={cell.width}
-          height={cell.height}
-          fill="white"
-          shapeRendering="crispEdges"
-          initial={{ opacity: initialOpacity }}
-          animate={{ opacity: targetOpacity }}
-          transition={{
-            duration: grid.pixelDuration,
-            delay: startDelay + cell.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+       style={{ maskType: "alpha" }}
+     >
+       {grid.cells.map((cell, pixel) => (
+         <motion.rect
+           key={pixel}
+           x={cell.x}
+           y={cell.y}
+           width={cell.width}
+           height={cell.height}
+           fill="white"
+           initial={{ opacity: initialOpacity }}
+           animate={{ opacity: targetOpacity }}
+           transition={{
+             duration: grid.pixelDuration,
+             delay: startDelay + cell.delay,
+             ease: "easeInOut",
+           }}
+         />
+       ))}
     </mask>
   );
 }
@@ -251,7 +250,7 @@ const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
         alignmentClassName,
       )}
     >
-      <span ref={canvasRef} className="relative inline-grid w-max py-4">
+      <span ref={canvasRef} className="relative inline-grid w-max overflow-hidden py-4">
         <span className="invisible col-start-1 row-start-1 whitespace-nowrap">
           {outgoingText}
         </span>
@@ -262,7 +261,8 @@ const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
           <>
             <svg
               aria-hidden="true"
-              className="pointer-events-none absolute size-0"
+              className="pointer-events-none absolute inset-0"
+              style={{ width: dimensions.width, height: dimensions.height }}
             >
               <defs>
                 <PixelMask
@@ -287,23 +287,27 @@ const PixelTransitionCanvas = memo(function PixelTransitionCanvas({
                 alignmentClassName,
                 textClassName,
               )}
-              style={{
-                mask: `url(#${outgoingMaskId})`,
-                WebkitMask: `url(#${outgoingMaskId})`,
-              }}
-            >
-              {outgoingText}
-            </span>
-            <span
-              className={cn(
-                "pointer-events-none absolute inset-0 flex py-4 whitespace-nowrap",
-                alignmentClassName,
-                textClassName,
-              )}
-              style={{
-                mask: `url(#${incomingMaskId})`,
-                WebkitMask: `url(#${incomingMaskId})`,
-              }}
+               style={{
+                 maskImage: `url(#${outgoingMaskId})`,
+                 WebkitMaskImage: `url(#${outgoingMaskId})`,
+                 WebkitBackfaceVisibility: "hidden",
+                 backfaceVisibility: "hidden",
+               }}
+             >
+               {outgoingText}
+             </span>
+             <span
+               className={cn(
+                 "pointer-events-none absolute inset-0 flex py-4 whitespace-nowrap",
+                 alignmentClassName,
+                 textClassName,
+               )}
+               style={{
+                 maskImage: `url(#${incomingMaskId})`,
+                 WebkitMaskImage: `url(#${incomingMaskId})`,
+                 WebkitBackfaceVisibility: "hidden",
+                 backfaceVisibility: "hidden",
+               }}
             >
               {incomingText}
             </span>
