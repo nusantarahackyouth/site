@@ -74,11 +74,17 @@ const lang = getLang(Astro.request);
       );
     </script>
     <link
-      rel="preload"
-      href="%sveltekit.assets%/logo.webm"
-      as="video"
-      type="video/webm"
-    />
+       rel="preload"
+       href="/logo-static.png"
+       as="image"
+       type="image/png"
+     />
+     <link
+       rel="preload"
+       href="/logo.apng"
+       as="image"
+       type="image/apng"
+     />
 
     <ClientRouter />
   </head>

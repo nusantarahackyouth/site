@@ -11,17 +11,19 @@ const lang = getLang(Astro.request);
   import { getLang, setLang } from "@nhy/i18n";
 
   let navbarController: AbortController | undefined;
+  let animTimer: ReturnType<typeof setTimeout> | undefined;
 
   function setupNavbar() {
     navbarController?.abort();
+    clearTimeout(animTimer);
     navbarController = new AbortController();
     const { signal } = navbarController;
 
     const nav = document.querySelector<HTMLElement>("#navbar");
     const navbarLogo =
       document.querySelector<HTMLAnchorElement>("#navbar-logo");
-    const navbarLogoVideo =
-      navbarLogo?.querySelector<HTMLVideoElement>("video");
+    const navbarLogoImg =
+      navbarLogo?.querySelector<HTMLImageElement>("img");
     const flagEN = document.querySelector<HTMLElement>("#flag-en");
     const flagID = document.querySelector<HTMLElement>("#flag-id");
     const transitionOverlay =
@@ -30,13 +32,32 @@ const lang = getLang(Astro.request);
     if (
       !nav ||
       !navbarLogo ||
-      !navbarLogoVideo ||
+      !navbarLogoImg ||
       !flagEN ||
       !flagID ||
       !transitionOverlay
     ) {
       return;
     }
+
+    const staticLogoSrc = "/logo-static.png";
+    const animatedLogoSrc = "/logo.apng";
+    const ANIM_DURATION = 1500;
+
+    function startAnimation() {
+      if (navbarLogoImg.dataset.animating === "1") return;
+      navbarLogoImg.dataset.animating = "1";
+      navbarLogoImg.dataset.playing = "1";
+      navbarLogoImg.src = animatedLogoSrc;
+      animTimer = setTimeout(() => {
+        navbarLogoImg.dataset.animating = "0";
+        navbarLogoImg.dataset.playing = "0";
+        navbarLogoImg.src = staticLogoSrc;
+      }, ANIM_DURATION);
+    }
+
+    // Play on page load
+    startAnimation();
 
     const updateNav = () => {
       if (window.scrollY > 15) {
@@ -58,25 +79,18 @@ const lang = getLang(Astro.request);
     updateNav();
     window.addEventListener("scroll", updateNav, { passive: true, signal });
 
-    let isLogoPlaying = false;
     navbarLogo.addEventListener(
       "mouseenter",
       () => {
-        if (isLogoPlaying) return;
-
-        isLogoPlaying = true;
-        navbarLogoVideo.currentTime = 0;
-        void navbarLogoVideo.play().catch(() => {
-          isLogoPlaying = false;
-        });
+        startAnimation();
       },
       { signal },
     );
 
-    navbarLogoVideo.addEventListener(
-      "ended",
+    navbarLogo.addEventListener(
+      "mouseleave",
       () => {
-        isLogoPlaying = false;
+        if (navbarLogoImg.dataset.animating === "1") return;
       },
       { signal },
     );
@@ -128,14 +142,10 @@ const lang = getLang(Astro.request);
 >
   <a href="/" class="contents" id="navbar-logo">
     <div class="flex gap-3 items-center">
-      <video
-        muted
-        playsinline
-        disablepictureinpicture
-        preload="auto"
-        src="/logo.webm"
+      <img
+        src="/logo-static.png"
         class="size-8 invert dark:invert-0 pointer-events-none select-none"
-        oncontextmenu="return false;"
+        data-animating="0"
       />
       <span class="font-jakarta-sans leading-4 font-semibold select-none">
         <p class="text-primary dark:text-[#f04051]">Nusantara</p>
