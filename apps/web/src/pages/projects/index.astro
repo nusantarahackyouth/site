@@ -1,26 +1,23 @@
 ---
-import ServerAPI from "@/lib/requests/server";
-
 import Layout from "@/layouts/Layout.astro";
-import { getLang, t } from "@nhy/i18n";
 
 import Sunbeam01 from "@/assets/events/sunbeam-jakarta-26/photo-01.jpg";
 import Sunbeam02 from "@/assets/events/sunbeam-jakarta-26/photo-02.jpg";
 import Sunbeam03 from "@/assets/events/sunbeam-jakarta-26/photo-03.jpg";
 import { Image } from "astro:assets";
-
-const result = await ServerAPI.getV1Test();
-const lang = getLang(Astro.request);
 ---
 
 <Layout>
-  <section class="bg-amber-600">
-    <div class="pt-40 pb-20 w-screen grid grid-cols-1 md:grid-cols-2 gap-4 inner items-center">
+  <section class="relative overflow-y-clip bg-orange-800/20 dark:bg-orange-800/10">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -bottom-8 left-[50%] translate-x-[-50%] bg-orange-500/40 dark:bg-orange-500/20 h-96 rounded-t-full w-[80vw] blur-[6rem]" />
+    </div>
+    <div class="pt-36 pb-24 relative z-10 w-screen grid grid-cols-1 md:grid-cols-2 gap-4 inner items-center">
       <div class="flex flex-col font-serif text-[2.5rem] leading-tight sm:text-5xl lg:text-6xl tracking-tight font-medium">
-        <div class="w-full text-center md:text-left lg:w-[unset] flex flex-wrap items-baseline gap-x-[0.2em]">
+        <div class="w-full -mt-8 text-center md:text-left lg:w-[unset] flex flex-wrap items-baseline gap-x-[0.2em]">
           <p>
             We make, We create, and do things{" "}
-            <span class="px-3 bg-foreground text-background -rotate-3">
+            <span class="px-3 bg-orange-600 text-white -rotate-3">
               in collaboration
             </span>
           </p>

@@ -5,12 +5,16 @@ import { z } from "astro/zod";
 const events = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/events" }),
   schema: z.object({
+    orderIndex: z.number().optional(),
     title: z.string(),
     description: z.string(),
     type: z.enum(["online", "offline"]),
     date: z.string(),
     location: z.string(),
-    image: z.string(),
+    logo: z.string().startsWith("/"),
+    accent: z.string().startsWith("/").optional(),
+    image: z.array(z.string().startsWith("/")),
+    thumbnail: z.string().startsWith("/").optional(), // if no thumbnail is provided, use the first image
     brandFields: z.array(
       z.object({
         title: z.string(),
@@ -28,6 +32,11 @@ const events = defineCollection({
         ),
       }),
     ),
+    classNames: z
+      .object({
+        accent: z.string().optional(),
+      })
+      .optional(),
   }),
 });
 
@@ -37,7 +46,9 @@ const projects = defineCollection({
     title: z.string(),
     description: z.string(),
     pubDate: z.string(),
-    image: z.string(),
+    logo: z.string().startsWith("/"),
+    image: z.array(z.string().startsWith("/")),
+    thumbnail: z.string().startsWith("/").optional(), // if no thumbnail is provided, use the first image
   }),
 });
 
