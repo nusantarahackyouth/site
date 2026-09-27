@@ -22,8 +22,7 @@ const lang = getLang(Astro.request);
     const nav = document.querySelector<HTMLElement>("#navbar");
     const navbarLogo =
       document.querySelector<HTMLAnchorElement>("#navbar-logo");
-    const navbarLogoImg =
-      navbarLogo?.querySelector<HTMLImageElement>("img");
+    const navbarLogoImg = navbarLogo?.querySelector<HTMLImageElement>("img");
     const flagEN = document.querySelector<HTMLElement>("#flag-en");
     const flagID = document.querySelector<HTMLElement>("#flag-id");
     const transitionOverlay =
@@ -148,7 +147,7 @@ const lang = getLang(Astro.request);
         data-animating="0"
       />
       <span class="font-jakarta-sans leading-4 font-semibold select-none">
-        <p class="text-primary dark:text-[#f04051]">Nusantara</p>
+        <p class="text-primary">Nusantara</p>
         <p class="font-bold">Hack Youth</p>
       </span>
     </div>
