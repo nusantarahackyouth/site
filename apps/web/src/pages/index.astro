@@ -149,7 +149,7 @@ const lang = getLang(Astro.request);
         {t("hero.description", lang)}
       </p>
       <div class="flex gap-2 items-center pointer-events-auto">
-        <a href="/support-us" class="contents">
+        <a href="/support-us" class="contents" data-hero-cta="support">
           <Button
             className="rounded-full p-5 text-lg shimmer-hover hover:bg-primary cursor-pointer"
             size="lg"
@@ -159,7 +159,7 @@ const lang = getLang(Astro.request);
             </span>
           </Button>
         </a>
-        <a href="/events" class="contents">
+        <a href="/events" class="contents" data-hero-cta="events">
           <Button
             className="rounded-full p-5 text-lg"
             size="lg"
@@ -376,3 +376,35 @@ const lang = getLang(Astro.request);
     </div>
   </section>
 </Layout>
+
+<script>
+  import { posthogLogger } from "@/lib/posthog-logger";
+
+  let heroCtaController: AbortController | undefined;
+
+  function setupHeroCtas() {
+    heroCtaController?.abort();
+    heroCtaController = new AbortController();
+    const { signal } = heroCtaController;
+
+    document
+      .querySelectorAll<HTMLAnchorElement>("[data-hero-cta]")
+      .forEach((cta) => {
+        cta.addEventListener(
+          "click",
+          () => {
+            window.posthog?.capture("hero_cta_clicked", {
+              destination: cta.dataset.heroCta,
+            });
+            posthogLogger.info("Visitor selected a hero call to action", {
+              destination: cta.dataset.heroCta,
+            });
+          },
+          { signal },
+        );
+      });
+  }
+
+  setupHeroCtas();
+  document.addEventListener("astro:page-load", setupHeroCtas);
+</script>

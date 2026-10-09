@@ -9,6 +9,7 @@ const lang = getLang(Astro.request);
 
 <script>
   import { getLang, setLang } from "@nhy/i18n";
+  import { posthogLogger } from "@/lib/posthog-logger";
 
   let navbarController: AbortController | undefined;
   let animTimer: ReturnType<typeof setTimeout> | undefined;
@@ -113,6 +114,8 @@ const lang = getLang(Astro.request);
 
       setLang(lang);
       updateFlags();
+      window.posthog?.capture("language_changed", { language: lang });
+      posthogLogger.info("Visitor changed the site language", { language: lang });
 
       await new Promise((resolve) => setTimeout(resolve, 700));
       if (signal.aborted) return;

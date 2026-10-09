@@ -3,6 +3,7 @@ import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
 
 import Navbar from "@/components/core/Navbar.astro";
+import PostHog from "@/components/posthog.astro";
 import { getLang } from "@nhy/i18n";
 
 const lang = getLang(Astro.request);
@@ -17,6 +18,7 @@ const lang = getLang(Astro.request);
     <meta name="theme-color" content="#15111f" />
 
     <title>Nusantara Hack Youth</title>
+    <PostHog />
 
     <script>
       const storedTheme = localStorage.getItem("@nhy/theme");

@@ -39,6 +39,7 @@
     "cn": "^0.3.0",
     "motion": "^13.4.0",
     "ogl": "^1.0.11",
+    "posthog-js": "^1.438.2",
     "postprocessing": "^6.39.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
