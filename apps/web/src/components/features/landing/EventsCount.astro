@@ -1,0 +1,7 @@
+---
+import ServerAPI from "@/lib/requests/server";
+
+const events = await ServerAPI.getEvents();
+---
+
+{events?.data?.length ?? "3+"}

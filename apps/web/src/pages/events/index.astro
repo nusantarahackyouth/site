@@ -6,6 +6,9 @@ import { getCollection } from "astro:content";
 import eventImages from "@/assets/_imports";
 import { cn } from "cn";
 
+// Prerendered so `imageService: "compile"` optimizes the images at build time.
+export const prerender = true;
+
 const collection = await getCollection("events");
 ---
 

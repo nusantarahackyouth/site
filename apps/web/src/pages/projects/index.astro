@@ -5,6 +5,9 @@ import Eric01 from "@/assets/projects/eric-26/photo-01.jpg";
 import GarudaHacks04 from "@/assets/projects/garuda-hacks-26/photo-04.jpg";
 import GarudaHacks05 from "@/assets/projects/garuda-hacks-26/photo-05.jpg";
 import { Image } from "astro:assets";
+
+// Prerendered so `imageService: "compile"` optimizes the images at build time.
+export const prerender = true;
 ---
 
 <Layout>

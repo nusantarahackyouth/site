@@ -14,6 +14,9 @@ export default defineConfig({
   output: "server",
   adapter: cloudflare({ imageService: "compile" }),
   session: false,
+  // Emit prerendered pages as `events.html` so `/events` is served without a
+  // redirect to `/events/`.
+  build: { format: "file" },
 
   vite: {
     plugins: [tailwindcss()],
