@@ -11,4 +11,8 @@
   <a href="https://hackyouth.id" target="_blank">hackyouth.id</a>
 </div>
 
-## still under construction!
+Building Nusantara Hack Youth's site with Astro and Hono from scratch.
+
+## Gallery
+
+![Screenshot](./.github/assets/screenshot.png)
